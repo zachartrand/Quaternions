@@ -103,10 +103,15 @@ class Quaternion():
             return hash((self.real, self.i, self.j, self.k))
 
     def __neg__(self):
+        """Return -self."""
         return Quaternion(-self.real, -self.i, -self.j, -self.k)
 
     def __abs__(self):
-        """Return abs(self)."""
+        """
+        Return abs(self).
+
+        Returns the magnitude of the quaternion.
+        """
         return _hypot(self.real, self.i, self.j, self.k)
 
     def __add__(self, other):
@@ -172,10 +177,6 @@ class Quaternion():
 
         If the Quaternion is multiplied by an int or float, the
         int/float is distributed to each component.
-
-        A Quaternion multiplied by a complex number will raise a
-        TypeError, as it is ambiguous which vector component the
-        imaginary component should be treated as.
         """
         if isinstance(other, int) or isinstance(other, float):
             return Quaternion(
@@ -254,7 +255,6 @@ class Quaternion():
         """Return the vector part of the quaternion."""
         return Quaternion(0, self.i, self.j, self.k)
 
-    @property
     def unit_vector(self):
         """
         Return the vector part of the quaternion normalized to a
@@ -265,6 +265,17 @@ class Quaternion():
         else:
             v = Quaternion(0, self.i, self.j, self.k)
             return v/abs(v)
+
+    def unit_quaternion(self):
+        """
+        Return the quaternion normalized to unity (1).
+
+        If the quaternion is a zero (0) quaternion, returns None.
+        """
+        if abs(self) != 0:
+            return self / abs(self)
+
+        return None
 
     def get_vector_components(self):
         """Return the vector components of the Quaternion as a list
@@ -290,6 +301,7 @@ class Quaternion():
         """
         if self.real == 0 and (self.i != 0 or self.j != 0 or self.k != 0):
             return True
+
         return False
 
     def is_complex(self):
@@ -307,8 +319,8 @@ class Quaternion():
     def get_imag(self):
         """
         Returns the imaginary component of the quaternion if only one
-        of the imaginary components is nonzero. Otherwise,
-        returns None.
+        of the imaginary components is nonzero. If the quaternion is
+        scalar, this returns 0.0. Otherwise, returns None.
         """
         if self.is_complex():
             for component in (self.i, self.j, self.k):
