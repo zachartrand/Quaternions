@@ -58,7 +58,7 @@ def pow(q: Quaternion, x: int or float) -> Quaternion:
             else:
                 v = q.vector
                 theta = _acos(a/abs(q))
-                return _pow(abs(q), x) * exp(v.unit_vector*x*theta)
+                return _pow(abs(q), x) * exp(v.unit_vector()*x*theta)
 
 def rotate3d(point: tuple or list, angle: int or float,
              axis: tuple or int=(0, 0, 1), rounding: int=14) -> tuple:
