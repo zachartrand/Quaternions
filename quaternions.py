@@ -15,7 +15,7 @@ quaternion first.
 
 __all__ = ['Quaternion']
 
-from math import hypot as _hypot
+from math import hypot as _hypot, ceil as _ceil
 from typing import List
 
 class Quaternion():
@@ -113,6 +113,34 @@ class Quaternion():
         Returns the magnitude of the quaternion.
         """
         return _hypot(self.real, self.i, self.j, self.k)
+
+    def __round__(self, ndigits=None):
+        """
+        Return round(self, ndigits).
+
+        Rounds each component of the quaternion to the nearest integer.
+        Each component is returned as a float.
+        """
+        return Quaternion(
+            float(round(self.real, ndigits)), float(round(self.i, ndigits)),
+            float(round(self.j, ndigits)), float(round(self.k, ndigits)))
+
+    def __floor__(self):
+        """
+        Returns the quaternion with all of its components rounded down
+        to the nearest integer.
+        """
+        return Quaternion(
+            self.real // 1, self.i // 1, self.j // 1, self.k // 1)
+
+    def __ceil__(self):
+        """
+        Returns the quaternion with all of its components rounded up
+        to the nearest integer.
+        """
+        return Quaternion(
+            float(_ceil(self.real)), float(_ceil(self.i)),
+            float(_ceil(self.j)), float(_ceil(self.k)))
 
     def __add__(self, other):
         """Return self+other."""
@@ -219,6 +247,18 @@ class Quaternion():
             self.real**2 + self.i**2 + self.j**2 + self.k**2)
         return q_inverse
 
+    def __floordiv__(self, other):
+        """
+        Return self // other.
+
+        If other is an int or float, returns the quaternion with each
+        component floor divided by the other.
+        """
+        if isinstance(other, int) or isinstance(other, float):
+            return Quaternion(
+                self.real // other, self.i // other, self.j // other,
+                self.k // other)
+
     def __truediv__(self, other):
         """
         Return self/other.
@@ -244,6 +284,13 @@ class Quaternion():
             raise TypeError(
                 'Cannot divide a complex number by a Quaternion. Make the '
                 + 'complex number a Quaternion before dividing.')
+
+    def __complex__(self):
+        """Return complex(self)."""
+        if self.is_complex():
+            real = self.real
+            imag = self.get_imag()
+            return complex(real, imag)
 
     @property
     def scalar(self) -> float:
