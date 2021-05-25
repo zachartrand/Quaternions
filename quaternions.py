@@ -122,8 +122,8 @@ class Quaternion():
         Each component is returned as a float.
         """
         return Quaternion(
-            float(round(self.real, ndigits)), float(round(self.i, ndigits)),
-            float(round(self.j, ndigits)), float(round(self.k, ndigits)))
+            round(self.real, ndigits), round(self.i, ndigits),
+            round(self.j, ndigits), round(self.k, ndigits))
 
     def __floor__(self):
         """
@@ -139,14 +139,14 @@ class Quaternion():
         to the nearest integer.
         """
         return Quaternion(
-            float(_ceil(self.real)), float(_ceil(self.i)),
-            float(_ceil(self.j)), float(_ceil(self.k)))
+            _ceil(self.real), _ceil(self.i),
+            _ceil(self.j), _ceil(self.k))
 
     def __add__(self, other):
         """Return self+other."""
         if isinstance(other, int) or isinstance(other, float):
             real = self.real + other
-            return Quaternion(real, self.i, self.j, self.k)
+            i, j, k = self.i, self.j, self.k
         elif isinstance(other, complex):
             raise TypeError(
                 'Cannot add a Quaternion to a complex number. Make the '
@@ -156,10 +156,11 @@ class Quaternion():
             i = self.i + other.i
             j = self.j + other.j
             k = self.k + other.k
-            return Quaternion(real, i, j, k)
         else:
             raise TypeError('Cannot add a {} to a {}'.format(
                 type(other).__name__, type(self).__name__))
+
+        return Quaternion(real, i, j, k)
 
     def __radd__(self, other):
         """Return other+self."""
@@ -174,7 +175,7 @@ class Quaternion():
         """Return self-other."""
         if isinstance(other, int) or isinstance(other, float):
             real = self.real - other
-            return Quaternion(real, self.i, self.j, self.k)
+            i, j, k = self.i, self.j, self.k
         elif isinstance(other, complex):
             raise TypeError(
                 'Cannot subtract a complex number from a Quaternion. Make the '
@@ -184,10 +185,11 @@ class Quaternion():
             i = self.i - other.i
             j = self.j - other.j
             k = self.k - other.k
-            return Quaternion(real, i, j, k)
         else:
             raise TypeError('Cannot add a {} to a {}'.format(
                 type(other).__name__, type(self).__name__))
+
+        return Quaternion(real, i, j, k)
 
     def __rsub__(self, other):
         """Return other-self."""
@@ -207,7 +209,7 @@ class Quaternion():
         int/float is distributed to each component.
         """
         if isinstance(other, int) or isinstance(other, float):
-            return Quaternion(
+            real, i, j, k = (
                 other*self.real, other*self.i, other*self.j, other*self.k)
         elif isinstance(other, complex):
             raise TypeError(
@@ -252,7 +254,7 @@ class Quaternion():
         Return self // other.
 
         If other is an int or float, returns the quaternion with each
-        component floor divided by the other.
+        component floor divided by other.
         """
         if isinstance(other, int) or isinstance(other, float):
             return Quaternion(
@@ -291,6 +293,7 @@ class Quaternion():
             real = self.real
             imag = self.get_imag()
             return complex(real, imag)
+        return None
 
     @property
     def scalar(self) -> float:
@@ -305,7 +308,8 @@ class Quaternion():
     def unit_vector(self):
         """
         Return the vector part of the quaternion normalized to a
-        magnitude of one (1).
+        magnitude of one (1). Returns the zero quaternion if the
+        magnitude of the quaternion is zero (0).
         """
         if (self.i, self.j, self.k) == (0, 0, 0):
             return Quaternion(0, 0, 0, 0)
@@ -375,6 +379,5 @@ class Quaternion():
                     return component
         elif self.is_scalar():
             return 0.0
-
         else:
             return None
