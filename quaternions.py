@@ -356,7 +356,7 @@ class Quaternion():
 
         return False
 
-    def is_complex(self):
+    def is_complex(self) -> bool:
         """
         Returns True if only one of the i, j, and k components is
         nonzero. Otherwise, returns False.
@@ -368,7 +368,7 @@ class Quaternion():
 
         return False
 
-    def get_imag(self):
+    def get_imag(self) -> float:
         """
         Returns the imaginary component of the quaternion if only one
         of the imaginary components is nonzero. If the quaternion is
