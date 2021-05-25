@@ -75,7 +75,7 @@ class Quaternion():
 
     def __eq__(self, other):
         """Return self == other."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return (self.real, self.i, self.j, self.k) == (other, 0, 0, 0)
         elif isinstance(other, complex):
             return (self.real, self.get_imag()) == (
@@ -144,7 +144,7 @@ class Quaternion():
 
     def __add__(self, other):
         """Return self+other."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             real = self.real + other
             i, j, k = self.i, self.j, self.k
         elif isinstance(other, complex):
@@ -157,14 +157,13 @@ class Quaternion():
             j = self.j + other.j
             k = self.k + other.k
         else:
-            raise TypeError('Cannot add a {} to a {}'.format(
-                type(other).__name__, type(self).__name__))
+            return NotImplemented
 
         return Quaternion(real, i, j, k)
 
     def __radd__(self, other):
         """Return other+self."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return self + other
         elif isinstance(other, complex):
             raise TypeError(
@@ -173,7 +172,7 @@ class Quaternion():
 
     def __sub__(self, other):
         """Return self-other."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             real = self.real - other
             i, j, k = self.i, self.j, self.k
         elif isinstance(other, complex):
@@ -186,14 +185,13 @@ class Quaternion():
             j = self.j - other.j
             k = self.k - other.k
         else:
-            raise TypeError('Cannot add a {} to a {}'.format(
-                type(other).__name__, type(self).__name__))
+            return NotImplemented
 
         return Quaternion(real, i, j, k)
 
     def __rsub__(self, other):
         """Return other-self."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             real = other - self.real
             return Quaternion(real, -self.i, -self.j, -self.k)
         elif isinstance(other, complex):
@@ -208,7 +206,7 @@ class Quaternion():
         If the Quaternion is multiplied by an int or float, the
         int/float is distributed to each component.
         """
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             real, i, j, k = (
                 other*self.real, other*self.i, other*self.j, other*self.k)
         elif isinstance(other, complex):
@@ -225,14 +223,13 @@ class Quaternion():
             k = (self.real*other.k + self.k*other.real + self.i*other.j
                  - self.j*other.i)
         else:
-            raise TypeError('Cannot multiply a {} by a {}'.format(
-                type(other).__name__, type(self).__name__))
+            return NotImplemented
 
         return Quaternion(real, i, j, k)
 
     def __rmul__(self, other):
         """Return other*self."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return self * other
         elif isinstance(other, complex):
             raise TypeError(
@@ -256,13 +253,12 @@ class Quaternion():
         If other is an int or float, returns the quaternion with each
         component floor divided by other.
         """
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return Quaternion(
                 self.real // other, self.i // other, self.j // other,
                 self.k // other)
         else:
-            raise TypeError('A Quaternion can only be floor divided by a '
-                          + 'float or int.')
+            return NotImplemented
 
     def __truediv__(self, other):
         """
@@ -271,7 +267,7 @@ class Quaternion():
         For division q1/q2, this assumes the order of multiplication
         is q1 * 1/q2.
         """
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return Quaternion(
                 self.real/other, self.i/other, self.j/other, self.k/other)
         elif isinstance(other, complex):
@@ -280,10 +276,12 @@ class Quaternion():
                 + 'complex number a Quaternion before dividing.')
         elif isinstance(other, Quaternion):
             return self * other.inverse()
+        else:
+            return NotImplemented
 
     def __rtruediv__(self, other):
         """Return other/self."""
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, (int, float)):
             return self.inverse() * other
         elif isinstance(other, complex):
             raise TypeError(
@@ -296,7 +294,7 @@ class Quaternion():
             real = self.real
             imag = self.get_imag()
             return complex(real, imag)
-        return None
+        return NotImplemented
 
     @property
     def scalar(self) -> float:
@@ -304,7 +302,7 @@ class Quaternion():
         return self.real
 
     @property
-    def vector(self) -> List[float]:
+    def vector(self):
         """Return the vector part of the quaternion."""
         return Quaternion(0, self.i, self.j, self.k)
 
@@ -331,7 +329,7 @@ class Quaternion():
 
         return None
 
-    def get_vector_components(self):
+    def get_vector_components(self) -> List[float]:
         """Return the vector components of the Quaternion as a list
         formatted as
 
