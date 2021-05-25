@@ -49,12 +49,12 @@ class Quaternion():
 
         Returns a string of the quaternion in the form
 
-            'a + bi + cj + dk',
+            '(a + bi + cj + dk)',
 
         where a, b, c, and d are floats. If there is no real component,
         it is left out of the string, and has the format
 
-            'bi + cj + dk'.
+            '(bi + cj + dk)'.
         """
         i_str = str(self.i) + 'i'
         j_str = str(self.j) + 'j'
@@ -260,6 +260,9 @@ class Quaternion():
             return Quaternion(
                 self.real // other, self.i // other, self.j // other,
                 self.k // other)
+        else:
+            raise TypeError('A Quaternion can only be floor divided by a '
+                          + 'float or int.')
 
     def __truediv__(self, other):
         """
