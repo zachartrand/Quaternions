@@ -45,12 +45,20 @@ def log(q: Quaternion) -> Quaternion:
 
 def pow(q: Quaternion, x: int or float) -> Quaternion:
     """Return q**x, where x is a real exponent."""
-    if (isinstance(q, Quaternion) and (isinstance(x, int)
-            or isinstance(x, float))):
+    if (isinstance(q, Quaternion) and (isinstance(x, (int, float)))):
         if x // 1 == x:
-            for _ in range(x - 1):
-                q *= q
-            return q
+            if x > 0:
+                q2 = q
+                for _ in range(x - 1):
+                    q2 = q2 * q
+                return q2
+            elif x == 0:
+                return Quaternion(1, 0, 0, 0)
+            else:
+                q2 = 1
+                for _ in range(abs(x)):
+                    q2 = q2 / q
+                return q2
         else:
             a = q.scalar
             if q.is_scalar():
@@ -88,7 +96,7 @@ def rotate3d(point: tuple or list, angle: int or float,
         if abs(u) != 1:
             u = u/abs(u)
         q = _cos(angle/2) + u*_sin(angle/2)
-        p_prime = q * p * q.inverse()
+        p_prime = q * p * q.conjugate()
         i_prime, j_prime, k_prime = p_prime.get_vector_components()
         if rounding != -1:
             i_prime, j_prime, k_prime = (
@@ -98,6 +106,7 @@ def rotate3d(point: tuple or list, angle: int or float,
         return [i_prime, j_prime, k_prime]
 
 def _makeListLen3(i: Iterable[int or float]) -> list:
+    """Makes sure points and axes of rotation have 3 coordinates."""
     if not isinstance(i, list):
         i = list(i)
     while len(i) < 3:
