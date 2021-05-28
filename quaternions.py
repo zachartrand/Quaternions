@@ -102,6 +102,10 @@ class Quaternion():
         else:
             return hash((self.real, self.i, self.j, self.k))
 
+    def __pos__(self):
+        """Return +self."""
+        return self
+
     def __neg__(self):
         """Return -self."""
         return Quaternion(-self.real, -self.i, -self.j, -self.k)
@@ -164,7 +168,7 @@ class Quaternion():
     def __radd__(self, other):
         """Return other+self."""
         if isinstance(other, (int, float)):
-            return self + other
+            return self.__add__(other)
         elif isinstance(other, complex):
             raise TypeError(
                 'Cannot add a complex number to a Quaternion. Make the '
@@ -230,7 +234,7 @@ class Quaternion():
     def __rmul__(self, other):
         """Return other*self."""
         if isinstance(other, (int, float)):
-            return self * other
+            return self.__mul__(other)  # Scalar multiplication commutes.
         elif isinstance(other, complex):
             raise TypeError(
                 'Cannot multiply a complex number by a Quaternion. Make the '
@@ -242,8 +246,24 @@ class Quaternion():
 
     def inverse(self):
         """Return 1/self."""
-        q_inverse = self.conjugate() / (
-            self.real**2 + self.i**2 + self.j**2 + self.k**2)
+        # =====================================================================
+        # Added an algorithm similar to Python's algorithm for complex numbers
+        # to avoid overflow and underflow errors. Using this algorithm avoids
+        # squaring numbers and scales the components by the largest of the
+        # components, making the base numbers to work with between 0 and 1
+        # in magnitude.
+        # =====================================================================
+        max_component = max(abs(self.real), abs(self.i), abs(self.j), abs(self.k))
+        real_ratio = self.real / max_component
+        i_ratio = self.i / max_component
+        j_ratio = self.j / max_component
+        k_ratio = self.k / max_component
+        denom = (real_ratio * self.real + i_ratio * self.i
+                 + j_ratio * self.j + k_ratio * self.k)
+
+        q_inverse = (
+            Quaternion(real_ratio, -i_ratio, -j_ratio, -k_ratio)
+            / denom)
         return q_inverse
 
     def __floordiv__(self, other):
@@ -265,7 +285,7 @@ class Quaternion():
         Return self/other.
 
         For division q1/q2, this assumes the order of multiplication
-        is q1 * 1/q2.
+        is q1 * 1/q2. To left-multiply the denominator, enter 1/q2 * q1.
         """
         if isinstance(other, (int, float)):
             return Quaternion(
@@ -275,14 +295,14 @@ class Quaternion():
                 'Cannot divide a Quaternion by a complex number. Make the '
                 + 'complex number a Quaternion before dividing.')
         elif isinstance(other, Quaternion):
-            return self * other.inverse()
+            return self.__mul__(other.inverse())
         else:
             return NotImplemented
 
     def __rtruediv__(self, other):
         """Return other/self."""
         if isinstance(other, (int, float)):
-            return self.inverse() * other
+            return self.inverse().__mul__(other)
         elif isinstance(other, complex):
             raise TypeError(
                 'Cannot divide a complex number by a Quaternion. Make the '
@@ -305,6 +325,16 @@ class Quaternion():
     def vector(self):
         """Return the vector part of the quaternion."""
         return Quaternion(0, self.i, self.j, self.k)
+
+    @property
+    def norm(self):
+        """Returns the norm (magnitude) of the quaternion."""
+        return abs(self)
+
+    @property
+    def vector_norm(self):
+        """Returns the norm of the vector part of the quaternion."""
+        return abs(self.vector)
 
     def unit_vector(self):
         """
