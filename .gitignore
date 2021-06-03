@@ -1,0 +1,7 @@
+# File types #
+##############
+*.pdf
+
+# pycache folder #
+##################
+__pycache__*
