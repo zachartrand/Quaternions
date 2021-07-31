@@ -82,7 +82,6 @@ rotate3d, that takes an iterable of coordinates and rotates them a given angle
 around a given axis (the z-axis by default). Here is an example rotating the
 point (1, 0, 0) around the z-axis:
 ```python
->>> from math import pi
 >>> import qmath
 >>>
 >>> p = (1, 0, 0)
