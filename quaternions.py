@@ -15,8 +15,14 @@ quaternion first.
 
 __all__ = ['Quaternion']
 
-from math import hypot as _hypot, ceil as _ceil, atan2 as _atan2
-from typing import List
+from math import (
+    hypot as _hypot,
+    ceil as _ceil,
+    atan2 as _atan2,
+    copysign as _copysign
+)
+from typing import List, Tuple
+
 
 class Quaternion():
     """
@@ -56,13 +62,32 @@ class Quaternion():
 
             '(bi + cj + dk)'.
         """
-        i_str = str(self.i) + 'i'
-        j_str = str(self.j) + 'j'
-        k_str = str(self.k) + 'k'
+        # Helper functions.
+        def _sign(x):
+            """Returns '+' or '-' based on whether x is positive or negative."""
+            if _copysign(1.0, x) == -1.0:
+                return "-"
+            else:
+                return "+"
+
+        def _num_to_str(x):
+            """
+            Returns a string of x as an integer if x is a positive or
+            negative whole number, otherwise returns a float string.
+            """
+            if x.is_integer():
+                return str(int(x))
+            else:
+                return str(x)
+
+        j_str = "".join([_sign(self.j), " ", _num_to_str(abs(self.j)), 'j'])
+        k_str = "".join([_sign(self.k), " ", _num_to_str(abs(self.k)), 'k'])
         if self.real:
-            q_str = ' + '.join([str(self.real), i_str, j_str, k_str])
+            i_str = "".join([_sign(self.i), " ", _num_to_str(abs(self.i)), 'i'])
+            q_str = ' '.join([_num_to_str(self.real), i_str, j_str, k_str])
         else:
-            q_str = ' + '.join([i_str, j_str, k_str])
+            i_str = "".join([_num_to_str(self.i), 'i'])
+            q_str = ' '.join([i_str, j_str, k_str])
 
         return f'({q_str})'
 
@@ -103,13 +128,21 @@ class Quaternion():
             return hash((self.real, self.i, self.j, self.k))
 
     def __iter__(self):
-        """Returns an iterator of the components of the quaternion."""
+        """
+        Returns an iterator of the components of the quaternion.
+
+        The components are in the order of
+
+            real, i, j, k
+        """
         return iter([self.real, self.i, self.j, self.k])
 
     def __reversed__(self):
         """
         Returns an iterator of the components of the quaternion
-        in reverse order.
+        in reverse order:
+
+            k, j, i, real
         """
         return reversed([self.real, self.i, self.j, self.k])
 
@@ -442,6 +475,15 @@ class Quaternion():
             versor = versor/abs(versor)
         return versor
 
+    @property
+    def components(self) -> Tuple[float]:
+        """
+        Returns the components of the quaternion as a tuple in the order
+
+            real, i, j, k
+        """
+        return (self.real, self.i, self.j, self.k)
+
     def unit_vector(self):
         """
         Return the vector part of the quaternion normalized to a
@@ -465,13 +507,13 @@ class Quaternion():
 
         return None
 
-    def get_vector_components(self) -> List[float]:
-        """Return the vector components of the Quaternion as a list
+    def get_vector_components(self) -> Tuple[float]:
+        """Return the vector components of the Quaternion as a tuple
         formatted as
 
-            [i, j, k].
+            (i, j, k).
         """
-        return [self.i, self.j, self.k]
+        return (self.i, self.j, self.k)
 
     def is_scalar(self) -> bool:
         """
