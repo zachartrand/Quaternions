@@ -8,14 +8,22 @@ Similar to the built-in module cmath, this module has definitions of
 mathematical functions expanded to work with quaternions.
 """
 
-__all__ = ['exp', 'log', 'pow', 'rotate3d']
+__all__ = ['exp', 'expm1', 'log', 'log1p', 'pow', 'rotate3d']
 
-from math import exp as _exp, cos as _cos, sin as _sin, log as _log
-from math import log1p as _log1p, pow as _pow, expm1 as _expm1
-
+from math import (
+    exp as _exp,
+    cos as _cos,
+    sin as _sin,
+    log as _log,
+    log1p as _log1p,
+    pow as _pow,
+    expm1 as _expm1,
+    pi
+)
 from typing import Iterable
 
 from quaternions import Quaternion
+
 
 def exp(q: Quaternion or int or float) -> Quaternion:
     """Returns the exponential of a quaternion."""
@@ -29,6 +37,7 @@ def exp(q: Quaternion or int or float) -> Quaternion:
 
     elif isinstance(q, (int, float)):
         return Quaternion(_exp(q), 0, 0, 0)
+
 
 def expm1(q: Quaternion) -> Quaternion:
     """
@@ -50,6 +59,7 @@ def expm1(q: Quaternion) -> Quaternion:
 
     return NotImplemented
 
+
 def log(q: Quaternion or int or float) -> Quaternion:
     """Return the natural logarithm of a quaternion."""
     if isinstance(q, Quaternion):
@@ -64,6 +74,7 @@ def log(q: Quaternion or int or float) -> Quaternion:
         return Quaternion(_log(q), 0, 0, 0)
 
     return NotImplemented
+
 
 def log1p(q: Quaternion or int or float) -> Quaternion:
     """
@@ -85,6 +96,7 @@ def log1p(q: Quaternion or int or float) -> Quaternion:
 
     return NotImplemented
 
+
 def pow(q: Quaternion or int or float, x: int or float) -> Quaternion:
     """Return q**x (q to the power of x), where x is a real exponent."""
     if (isinstance(q, Quaternion) and (isinstance(x, (int, float)))):
@@ -100,12 +112,23 @@ def pow(q: Quaternion or int or float, x: int or float) -> Quaternion:
 
     return NotImplemented
 
+
+def _makeListLen3(i: Iterable[int or float]) -> list:
+    """Makes sure points and axes of rotation have 3 coordinates."""
+    if not isinstance(i, list):
+        i = list(i)
+    while len(i) < 3:
+        i.append(0.0)
+    return i
+
+
 def rotate3d(point: tuple or list, angle: int or float,
-             axis: tuple or list=(0, 0, 1), rounding: int=-1) -> tuple:
+             axis: tuple or list=(0, 0, 1), rounding: int=-1,
+             degrees: bool=True) -> tuple:
     """
     Takes a point in 3d space represented as a tuple or list of three
     (3) values and rotates it by an angle around a given axis vector.
-    The axis of rotation is the z-axis [0, 0, 1] by default. For the
+    The axis of rotation is the z-axis (0, 0, 1) by default. For the
     point and axis parameters, if only one value is given, the value
     will be assumed to be an x-coordinate with the y- and z-coordinates
     equal to zero (0). If two values are given, they will be assumed to
@@ -113,7 +136,12 @@ def rotate3d(point: tuple or list, angle: int or float,
     By default, this function does not round the result. If you wish to
     round the result to a number of decimal places, change the rounding
     argument to the number of decimal places you wish to round to.
+    The angle is set to be input in degrees. If you wish to use radians, set
+    'degrees' equal to False.
     """
+    if degrees:
+        angle = angle / 180 * pi
+
     if len(point) <= 3 and len(axis) <= 3:
         i, j, k = _makeListLen3(point)
         p = Quaternion(0, i, j, k)
@@ -136,11 +164,3 @@ def rotate3d(point: tuple or list, angle: int or float,
                 round(k_prime, rounding))
 
         return (i_prime, j_prime, k_prime)
-
-def _makeListLen3(i: Iterable[int or float]) -> list:
-    """Makes sure points and axes of rotation have 3 coordinates."""
-    if not isinstance(i, list):
-        i = list(i)
-    while len(i) < 3:
-        i.append(0.0)
-    return i
