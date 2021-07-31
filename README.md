@@ -87,12 +87,12 @@ point (1, 0, 0) around the z-axis:
 >>>
 >>> p = (1, 0, 0)
 >>>
->>> p = qmath.rotate3d(p, pi/2); print(p)
+>>> p = qmath.rotate3d(p, 90); print(p)
 (0.0, 1.0, 0.0)
->>> p = qmath.rotate3d(p, pi/2); print(p)
+>>> p = qmath.rotate3d(p, 90); print(p)
 (-1.0, 0.0, 0.0)
->>> p = qmath.rotate3d(p, pi/2); print(p)
+>>> p = qmath.rotate3d(p, 90); print(p)
 (0.0, -1.0, 0.0)
->>> p = qmath.rotate3d(p, pi/2); print(p)
+>>> p = qmath.rotate3d(p, 90); print(p)
 (1.0, 0.0, 0.0)
 ```
