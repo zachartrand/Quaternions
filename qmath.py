@@ -8,21 +8,28 @@ Similar to the built-in module cmath, this module has definitions of
 mathematical functions expanded to work with quaternions.
 """
 
-__all__ = ['exp', 'expm1', 'log', 'log1p', 'pow', 'rotate3d']
+__all__ = ['exp', 'log', 'log10', 'sqrt', 'rotate3d', 'pi', 'tau', 'e', 'inf',
+           'infi', 'infj', 'infk', 'nan', 'nani', 'nanj', 'nank']
 
 from math import (
     exp as _exp,
     cos as _cos,
     sin as _sin,
     log as _log,
-    log1p as _log1p,
-    pow as _pow,
-    expm1 as _expm1,
-    pi
+    pi, tau, e, inf, nan,
 )
+
 from typing import Iterable
 
 from quaternions import Quaternion
+
+nani = Quaternion(0, float('nan'), 0, 0)
+nanj = Quaternion(0, 0, float('nan'), 0)
+nank = Quaternion(0, 0, 0, float('nan'))
+
+infi = Quaternion(0, float('inf'), 0, 0)
+infj = Quaternion(0, 0, float('inf'), 0)
+infk = Quaternion(0, 0, 0, float('inf'))
 
 
 def exp(q: Quaternion or int or float) -> Quaternion:
@@ -39,28 +46,7 @@ def exp(q: Quaternion or int or float) -> Quaternion:
         return Quaternion(_exp(q), 0, 0, 0)
 
 
-def expm1(q: Quaternion) -> Quaternion:
-    """
-    Return exp(q)-1.
-
-    This function avoids the loss of precision involved in the direct
-    evaluation of exp(q)-1 for q with a small norm.
-    """
-    if isinstance(q, Quaternion):
-        a = q.scalar
-        if q.is_scalar():
-            return Quaternion(_expm1(a), 0, 0, 0)
-
-        v = q.vector
-        return _expm1(a)*(cos(abs(v)) + q.unit_vector()*_sin(abs(v)))
-
-    elif isinstance(q, (int, float)):
-        return Quaternion(_expm1(q), 0, 0, 0)
-
-    return NotImplemented
-
-
-def log(q: Quaternion or int or float) -> Quaternion:
+def log(q: Quaternion or int or float, base: int or float=0) -> Quaternion:
     """Return the natural logarithm of a quaternion."""
     if isinstance(q, Quaternion):
         a = q.scalar
@@ -68,7 +54,10 @@ def log(q: Quaternion or int or float) -> Quaternion:
             return Quaternion(_log(a), 0, 0, 0)
 
         angle = q.angle
-        return _log(abs(q)) + q.unit_vector()*angle
+        answer = _log(abs(q)) + q.unit_vector()*angle
+        if base:
+            answer = answer / _log(base)
+        return answer
 
     elif isinstance(q, (int, float)):
         return Quaternion(_log(q), 0, 0, 0)
@@ -76,41 +65,19 @@ def log(q: Quaternion or int or float) -> Quaternion:
     return NotImplemented
 
 
-def log1p(q: Quaternion or int or float) -> Quaternion:
-    """
-    Return the natural logarithm of 1+q.
-
-    The result is computed in a way which is accurate for q with a norm
-    near zero.
-    """
-    if isinstance(q, Quaternion):
-        a = q.scalar
-        if q.is_scalar():
-            return Quaternion(_log1p(a), 0, 0, 0)
-
-        angle = q.angle
-        return _log1p(abs(q)) + q.unit_vector()*angle
-
-    elif isinstance(q, (int, float)):
-        return Quaternion(_log1p(q), 0, 0, 0)
-
-    return NotImplemented
+def log10(q: Quaternion or int or float) -> Quaternion:
+    """Return the base-10 logarithm of the quaternion."""
+    return (log(q) / _log(10))
 
 
-def pow(q: Quaternion or int or float, x: int or float) -> Quaternion:
-    """Return q**x (q to the power of x), where x is a real exponent."""
-    if (isinstance(q, Quaternion) and (isinstance(x, (int, float)))):
-        a = q.scalar
-        if q.is_scalar():
-            return Quaternion(_pow(a, x), 0, 0, 0)
+def sqrt(q: Quaternion or int or float) -> Quaternion:
+    """Return the square root of q."""
+    if q.is_scalar() and q.real < 0:
+        raise ValueError("Negative real quaternions have an infinite number "
+            + f"of square roots.\nThe square root of {q.real} is the sphere "
+            + f"of radius {abs(q)**0.5:.4f}... centered at the origin.")
 
-        theta = q.angle
-        return (_pow(abs(q), x) * exp(q.unit_vector()*x*theta))
-
-    elif isinstance(q, (int, float)):
-        return Quaternion(_pow(q, x), 0, 0, 0)
-
-    return NotImplemented
+    return q.__pow__(0.5)
 
 
 def _makeListLen3(i: Iterable[int or float]) -> list:
@@ -140,7 +107,10 @@ def rotate3d(point: tuple or list, angle: int or float,
     'degrees' equal to False.
     """
     if degrees:
-        angle = angle / 180 * pi
+        angle = angle % 360
+        angle = angle * pi / 180
+    else:
+        angle = angle % tau
 
     if len(point) <= 3 and len(axis) <= 3:
         i, j, k = _makeListLen3(point)
