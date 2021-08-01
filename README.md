@@ -41,7 +41,10 @@ For example, creating the quaternion 1 - 2i - 3j + 4k looks like this in the
 Python interpreter:
 
 ```python
->>> Quaternion(1, -2, -3, 4)
+>>> q1 = Quaternion(1, -2, -3, 4)
+>>> q1
+Quaternion(1.0, -2.0, -3.0, 4.0)
+>>> print(q1)
 (1 - 2i - 3j + 4k)
 ```
 
