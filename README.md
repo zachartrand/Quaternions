@@ -50,25 +50,25 @@ quaternions together uses the same syntax as ints and floats:
 
 ```python
 >>> q1, q2 = Quaternion(1, -2, -3, 4), Quaternion(1, 4, -3, -2)
->>> q1
+>>> print(q1)
 (1 - 2i - 3j + 4k)
->>> q2
+>>> print(q2)
 (1 + 4i - 3j - 2k)
->>> q1 + q2
+>>> print(q1 + q2)
 (2 + 2i - 6j + 2k)
->>> q1 - q2
+>>> print(q1 - q2)
 (-6i + 0j + 6k)
->>> q2 - q1
+>>> print(q2 - q1)
 (6i + 0j - 6k)
->>> q1 * q2
+>>> print(q1 * q2)
 (8 + 20i + 6j + 20k)
->>> q2 * q1
+>>> print(q2 * q1)
 (8 - 16i - 18j - 16k)
->>> q1/q2
+>>> print(q1/q2)
 (-0.19999999999999996 - 0.8i - 0.4j - 0.4k)
->>> 1/q2 * q1
+>>> print(1/q2 * q1)
 (-0.19999999999999996 + 0.4i + 0.4j + 0.8k)
->>> q2/q1
+>>> print(q2/q1)
 (-0.19999999999999996 + 0.8i + 0.4j + 0.4k)
 ```
 
