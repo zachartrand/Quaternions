@@ -13,18 +13,23 @@ arithmetic with complex numbers, they must be converted into a
 quaternion first.
 """
 
-__all__ = ['Quaternion']
+from __future__ import annotations
+
+__all__ = ['Quaternion', 'quaternionFromAngle']
 
 from math import (
     hypot as _hypot,
+    floor as _floor,
     ceil as _ceil,
     atan2 as _atan2,
     copysign as _copysign,
     exp as _exp,
     cos as _cos,
     sin as _sin,
+    pi as _pi,
 )
-from typing import List, Tuple
+
+from typing import Tuple, Iterable, Iterator
 
 
 class Quaternion():
@@ -45,19 +50,19 @@ class Quaternion():
 
         i*j*k == -1.
     """
-    def __init__(self, real: int or float=0, i_component: int or float=0,
-            j_component: int or float=0, k_component: int or float=0):
+    def __init__(self, real: float = 0.0, i_component: float = 0.0,
+                 j_component: float = 0.0, k_component: float = 0.0) -> None:
         self.real: float = float(real)
         self.i: float = float(i_component)
         self.j: float = float(j_component)
         self.k: float = float(k_component)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return repr(self)."""
         return (f"{self.__class__.__qualname__}("
               + f"{self.real}, {self.i}, {self.j}, {self.k})")
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return str(self).
 
@@ -71,14 +76,14 @@ class Quaternion():
             '(bi + cj + dk)'.
         """
         # Helper functions.
-        def _sign(x):
+        def _sign(x: float) -> str:
             """Returns '+' or '-' based on whether x is positive or negative."""
             if _copysign(1.0, x) == -1.0:
                 return "-"
             else:
                 return "+"
 
-        def _num_to_str(x):
+        def _num_to_str(x: float) -> str:
             """
             Returns a string of x as an integer if x is a positive or
             negative whole number, otherwise returns a float string.
@@ -99,14 +104,14 @@ class Quaternion():
 
         return f'({q_str})'
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """self != 0"""
         if (self.real, self.i, self.j, self.k) == (0.0, 0.0, 0.0, 0.0):
             return False
 
         return True
 
-    def __eq__(self, other):
+    def __eq__(self, other: Quaternion or float or complex) -> bool:
         """Return self == other."""
         if isinstance(other, (int, float)):
             return (self.real, self.i, self.j, self.k) == (other, 0.0, 0.0, 0.0)
@@ -119,7 +124,7 @@ class Quaternion():
 
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Return hash(self).
 
@@ -135,7 +140,7 @@ class Quaternion():
         else:
             return hash((self.real, self.i, self.j, self.k))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[float]:
         """
         Return iter(self).
 
@@ -147,7 +152,7 @@ class Quaternion():
         """
         return iter([self.real, self.i, self.j, self.k])
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[float]:
         """
         Return reversed(self).
 
@@ -158,15 +163,15 @@ class Quaternion():
         """
         return reversed([self.real, self.i, self.j, self.k])
 
-    def __pos__(self):
+    def __pos__(self) -> Quaternion:
         """Return +self."""
         return self
 
-    def __neg__(self):
+    def __neg__(self) -> Quaternion:
         """Return -self."""
         return Quaternion(-self.real, -self.i, -self.j, -self.k)
 
-    def __abs__(self):
+    def __abs__(self) -> float:
         """
         Return abs(self).
 
@@ -174,7 +179,7 @@ class Quaternion():
         """
         return _hypot(self.real, self.i, self.j, self.k)
 
-    def __int__(self):
+    def __int__(self) -> int:
         """
         Return int(self).
 
@@ -186,7 +191,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def __float__(self):
+    def __float__(self) -> float:
         """
         Return float(self).
 
@@ -197,7 +202,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def __round__(self, ndigits=None):
+    def __round__(self, ndigits=None) -> Quaternion:
         """
         Return round(self, ndigits).
 
@@ -208,7 +213,7 @@ class Quaternion():
             round(self.real, ndigits), round(self.i, ndigits),
             round(self.j, ndigits), round(self.k, ndigits))
 
-    def __floor__(self):
+    def __floor__(self) -> Quaternion:
         """
         Return math.floor(self).
 
@@ -216,9 +221,9 @@ class Quaternion():
         to the nearest integer.
         """
         return Quaternion(
-            self.real // 1, self.i // 1, self.j // 1, self.k // 1)
+            _floor(self.real), _floor(self.i), _floor(self.j), _floor(self.k))
 
-    def __ceil__(self):
+    def __ceil__(self) -> Quaternion:
         """
         Return math.ceil(self).
 
@@ -226,10 +231,9 @@ class Quaternion():
         to the nearest integer.
         """
         return Quaternion(
-            _ceil(self.real), _ceil(self.i),
-            _ceil(self.j), _ceil(self.k))
+            _ceil(self.real), _ceil(self.i), _ceil(self.j), _ceil(self.k))
 
-    def __add__(self, other):
+    def __add__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self + other.
 
@@ -254,7 +258,7 @@ class Quaternion():
 
         return Quaternion(real, i, j, k)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Quaternion or float or complex) -> Quaternion:
         """Return other + self."""
         if isinstance(other, (int, float)):
             return self.__add__(other)
@@ -265,7 +269,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def __sub__(self, other):
+    def __sub__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self - other.
 
@@ -290,7 +294,7 @@ class Quaternion():
 
         return Quaternion(real, i, j, k)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return other - self.
 
@@ -308,7 +312,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def __mul__(self, other):
+    def __mul__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self * other.
 
@@ -339,7 +343,7 @@ class Quaternion():
 
         return Quaternion(real, i, j, k)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Quaternion or float or complex) -> Quaternion:
         """Return other * self."""
         if isinstance(other, (int, float)):
             return self.__mul__(other)  # Scalar multiplication commutes.
@@ -350,7 +354,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def conjugate(self):
+    def conjugate(self) -> Quaternion:
         """
         Returns the conjugate of self. This is analogous to the
         complex conjugate, reversing the signs of the vector
@@ -358,7 +362,7 @@ class Quaternion():
         """
         return Quaternion(self.real, -self.i, -self.j, -self.k)
 
-    def inverse(self):
+    def inverse(self) -> Quaternion:
         """
         Return 1/self.
 
@@ -383,11 +387,11 @@ class Quaternion():
                  + j_ratio * self.j + k_ratio * self.k)
 
         q_inverse = (
-            Quaternion(real_ratio, -i_ratio, -j_ratio, -k_ratio)
-            / denom)
+            Quaternion(real_ratio, -i_ratio, -j_ratio, -k_ratio) / denom)
+
         return q_inverse
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self // other.
 
@@ -401,7 +405,7 @@ class Quaternion():
         else:
             return NotImplemented
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self/other.
 
@@ -420,7 +424,7 @@ class Quaternion():
         else:
             return NotImplemented
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Quaternion or float or complex) -> Quaternion:
         """Return other/self."""
         if isinstance(other, (int, float)):
             return self.inverse().__mul__(other)
@@ -431,7 +435,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def __complex__(self):
+    def __complex__(self) -> complex:
         """
         Return complex(self).
 
@@ -442,7 +446,7 @@ class Quaternion():
             real = self.real
             imag = self.get_imag()
             return complex(real, imag)
-        
+
         return NotImplemented
 
     @property
@@ -451,7 +455,7 @@ class Quaternion():
         return self.real
 
     @property
-    def vector(self):
+    def vector(self) -> Quaternion:
         """Return the vector part of the quaternion."""
         return Quaternion(0, self.i, self.j, self.k)
 
@@ -477,15 +481,15 @@ class Quaternion():
         where u is a 3D unit vector. This returns the angle theta from
         this expression.
         """
-        return _atan2(abs(self.vector), self.real)
+        return _atan2(self.vector.__abs__(), self.real)
 
     @property
-    def versor(self):
+    def versor(self) -> Quaternion:
         """Returns the quaternion normalized to a magnitude of one (1)."""
         versor = self
-        while abs(versor) != 1.0:  # Doesn't always divide to norm 1 on the
-                                   # first division.
-            versor = versor/abs(versor)
+        while versor.__abs__() != 1.0:
+            # Doesn't always divide to norm 1 on the first division.
+            versor = versor/versor.__abs__()
         return versor
 
     @property
@@ -497,7 +501,7 @@ class Quaternion():
         """
         return (self.real, self.i, self.j, self.k)
 
-    def unit_vector(self):
+    def unit_vector(self) -> Quaternion:
         """
         Return the vector part of the quaternion normalized to a
         magnitude of one (1). Returns the zero quaternion if the
@@ -509,19 +513,20 @@ class Quaternion():
             v = Quaternion(0, self.i, self.j, self.k)
             return v.versor
 
-    def unit_quaternion(self):
+    def unit_quaternion(self) -> Quaternion or None:
         """
         Return the quaternion normalized to unity (1).
 
         If the quaternion is a zero (0) quaternion, returns None.
         """
-        if abs(self) != 0.0:
+        if self.__abs__() != 0.0:
             return self.versor
 
         return None
 
     def get_vector_components(self) -> Tuple[float]:
-        """Return the vector components of the Quaternion as a tuple
+        """
+        Return the vector components of the Quaternion as a tuple
         formatted as
 
             (i, j, k).
@@ -576,7 +581,7 @@ class Quaternion():
         else:
             return None
 
-    def __pow__(self, other: int or float, mod=None):
+    def __pow__(self, other: float, mod: None or float = None) -> Quaternion:
         """
         Return self**other.
 
@@ -593,9 +598,55 @@ class Quaternion():
 
             theta = self.angle
             return (
-                pow(abs(self), other) * (
-                    _cos(other*theta) + self.unit_vector()*_sin(other*theta)
+                pow(self.__abs__(), other) * (
+                    _cos(other*theta)
+                    + self.unit_vector().__mul__(_sin(other*theta))
                 )
             )
 
         return NotImplemented
+
+
+def _makeListLen3(i: Iterable[float]) -> list:
+    """Makes sure points and axes of rotation have 3 coordinates."""
+    if not isinstance(i, list):
+        i = list(i)
+
+    if len(i) > 3:
+        i = i[:3]
+    elif len(i) < 3:
+        while len(i) < 3:
+            i.append(0.0)
+    return i
+
+
+def quaternionFromAngle(
+        angle: float, vector: Iterable[float],
+        norm: float = 1.0, degrees: bool = True) -> Quaternion:
+    """
+    Returns a quaternion from an angle and vector.
+
+    Quaternions can be expressed as
+
+        norm*(cos(theta) + u*sin(theta)),
+
+    where u is a 3D unit vector. This function takes an angle and a vector to
+    create a quaternion. If you want a quaternion with a different norm than
+    one (1), you can change the 'norm' argument. By default, angles are entered
+    in degrees. If you want to enter an angle in radians, set 'degrees' to
+    False.
+    """
+    if degrees:
+        angle %= 360
+        angle = angle * _pi / 180
+    else:
+        angle %= (_pi*2)
+
+    i, j, k = _makeListLen3(vector)
+    u = Quaternion(0, i, j, k)
+    if abs(u) != 1.0:
+        u = u.versor
+
+    q = norm*(_cos(angle) + _sin(angle)*u)
+
+    return q
