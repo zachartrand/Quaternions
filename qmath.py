@@ -8,8 +8,8 @@ Similar to the built-in module cmath, this module has definitions of
 mathematical functions expanded to work with quaternions.
 """
 
-__all__ = ['exp', 'log', 'log10', 'sqrt', 'rotate3d', 'pi', 'tau', 'e', 'inf',
-           'infi', 'infj', 'infk', 'nan', 'nani', 'nanj', 'nank']
+__all__ = ['exp', 'log', 'log10', 'sqrt', 'rotate3d', 'pi', 'tau', 'e',
+           'inf', 'infi', 'infj', 'infk', 'nan', 'nani', 'nanj', 'nank']
 
 from math import (
     exp as _exp,
@@ -18,21 +18,20 @@ from math import (
     log as _log,
     pi, tau, e, inf, nan,
 )
+from typing import Iterable, Tuple
 
-from typing import Iterable
+from .quaternions import Quaternion, _makeListLen3
 
-from quaternions import Quaternion
+nani: Quaternion = Quaternion(0, float('nan'), 0, 0)
+nanj: Quaternion = Quaternion(0, 0, float('nan'), 0)
+nank: Quaternion = Quaternion(0, 0, 0, float('nan'))
 
-nani = Quaternion(0, float('nan'), 0, 0)
-nanj = Quaternion(0, 0, float('nan'), 0)
-nank = Quaternion(0, 0, 0, float('nan'))
-
-infi = Quaternion(0, float('inf'), 0, 0)
-infj = Quaternion(0, 0, float('inf'), 0)
-infk = Quaternion(0, 0, 0, float('inf'))
+infi: Quaternion = Quaternion(0, float('inf'), 0, 0)
+infj: Quaternion = Quaternion(0, 0, float('inf'), 0)
+infk: Quaternion = Quaternion(0, 0, 0, float('inf'))
 
 
-def exp(q: Quaternion or int or float) -> Quaternion:
+def exp(q: Quaternion or float) -> Quaternion:
     """Returns the exponential of a quaternion."""
     if isinstance(q, Quaternion):
         a = q.scalar
@@ -46,8 +45,13 @@ def exp(q: Quaternion or int or float) -> Quaternion:
         return Quaternion(_exp(q), 0, 0, 0)
 
 
-def log(q: Quaternion or int or float, base: int or float=0) -> Quaternion:
-    """Return the natural logarithm of a quaternion."""
+def log(q: Quaternion or float, base: float = e) -> Quaternion:
+    """
+    Return the logarithm of a quaternion to the given base.
+
+    If the base is not specified, returns the natural logarithm (base e) of the
+    quaternion.
+    """
     if isinstance(q, Quaternion):
         a = q.scalar
         if q.is_scalar():
@@ -55,43 +59,36 @@ def log(q: Quaternion or int or float, base: int or float=0) -> Quaternion:
 
         angle = q.angle
         answer = _log(abs(q)) + q.unit_vector()*angle
-        if base:
+        if base != e:
             answer = answer / _log(base)
         return answer
 
     elif isinstance(q, (int, float)):
-        return Quaternion(_log(q), 0, 0, 0)
+        return Quaternion(_log(q, base), 0, 0, 0)
 
     return NotImplemented
 
 
-def log10(q: Quaternion or int or float) -> Quaternion:
+def log10(q: Quaternion or float) -> Quaternion:
     """Return the base-10 logarithm of the quaternion."""
     return (log(q) / _log(10))
 
 
-def sqrt(q: Quaternion or int or float) -> Quaternion:
+def sqrt(q: Quaternion or float) -> Quaternion:
     """Return the square root of q."""
     if q.is_scalar() and q.real < 0:
-        raise ValueError("Negative real quaternions have an infinite number "
-            + f"of square roots.\nThe square root of {q.real} is the sphere "
-            + f"of radius {abs(q)**0.5:.4f}... centered at the origin.")
+        raise ValueError(
+            "Negative real quaternions have an infinite number "
+          + f"of square roots.\nThe square root of {q.real} is the sphere "
+          + f"of radius {abs(q)**0.5:.4f}... centered at the origin.")
 
-    return q.__pow__(0.5)
-
-
-def _makeListLen3(i: Iterable[int or float]) -> list:
-    """Makes sure points and axes of rotation have 3 coordinates."""
-    if not isinstance(i, list):
-        i = list(i)
-    while len(i) < 3:
-        i.append(0.0)
-    return i
+    return pow(q, 0.5)
 
 
-def rotate3d(point: tuple or list, angle: int or float,
-             axis: tuple or list=(0, 0, 1), rounding: int=-1,
-             degrees: bool=True) -> tuple:
+def rotate3d(
+        point: Iterable[float], angle: float,
+        axis: Iterable[float] = (0.0, 0.0, 1.0), rounding: int = -1,
+        degrees: bool = True) -> Tuple[float]:
     """
     Takes a point in 3d space represented as a tuple or list of three
     (3) values and rotates it by an angle around a given axis vector.
