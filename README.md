@@ -37,7 +37,7 @@ To create a quaternion, simply type
 >>> Quaternion(a, b, c, d)
 ```
 where a, b, c, and d correspond to a quaternion of the form `a + bi + cj + dk`.
-For example, creating the quaternion 1 - 2i - 3j + 4k looks like this in the
+For example, creating the quaternion `1 - 2i - 3j + 4k` looks like this in the
 Python interpreter:
 
 ```python
