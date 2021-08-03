@@ -20,7 +20,7 @@ from math import (
 )
 from typing import Iterable, Tuple
 
-from .quaternions import Quaternion, _makeListLen3
+from quaternions import Quaternion, _makeListLen3
 
 nani: Quaternion = Quaternion(0, float('nan'), 0, 0)
 nanj: Quaternion = Quaternion(0, 0, float('nan'), 0)
@@ -38,8 +38,8 @@ def exp(q: Quaternion or float) -> Quaternion:
         if q.is_scalar():
             return Quaternion(_exp(a), 0, 0, 0)
 
-        v = q.vector
-        return _exp(a)*(_cos(abs(v)) + q.unit_vector()*_sin(abs(v)))
+        theta = q.vector_norm % tau
+        return _exp(a)*(_cos(theta) + q.unit_vector()*_sin(theta))
 
     elif isinstance(q, (int, float)):
         return Quaternion(_exp(q), 0, 0, 0)
@@ -131,3 +131,13 @@ def rotate3d(
                 round(k_prime, rounding))
 
         return (i_prime, j_prime, k_prime)
+
+    else:
+        if len(point) > 3:
+            problem = "'point'"
+        elif len(axis) > 3:
+            problem = "'axis'"
+        else:
+            problem = "'point' and 'axis'"
+        raise IndexError(
+            f"{problem} must be a tuple or list of three (3) values.")
