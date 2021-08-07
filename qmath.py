@@ -16,6 +16,7 @@ from math import (
     cos as _cos,
     sin as _sin,
     log as _log,
+    log1p as _log1p,
     pi, tau, e, inf, nan,
 )
 from typing import Iterable, Tuple
@@ -53,18 +54,33 @@ def log(q: Quaternion or float, base: float = e) -> Quaternion:
     quaternion.
     """
     if isinstance(q, Quaternion):
-        a = q.scalar
         if q.is_scalar():
-            return Quaternion(_log(a), 0, 0, 0)
+            if 0.71 <= a and a <= 1.73:
+                return Quaternion(_log1p(q.real-1), 0, 0, 0)
+            else:
+                return Quaternion(_log(q.real), 0, 0, 0)
+        else:
+            if 0.71 <= q.norm and q.norm <= 1.73:
+                abs_components = [abs(q.real), abs(q.i), abs(q.j), abs(q.k)]
+                max_component = max(abs_components)
+                abs_components.remove(max_component)
+                real = _log1p(
+                    (max_component-1) * (max_component+1)
+                    + abs_components[0]*abs_components[0]
+                    + abs_components[1]*abs_components[1]
+                    + abs_components[2]*abs_components[2])/2.0
+            else:
+                real = _log(q.norm)
 
-        angle = q.angle
-        answer = _log(abs(q)) + q.unit_vector()*angle
-        if base != e:
-            answer = answer / _log(base)
-        return answer
+            angle = q.angle
+            answer = real + q.unit_vector()*angle
+            if base != e:
+                answer = answer / _log(base)
+
+            return answer
 
     elif isinstance(q, (int, float)):
-        return Quaternion(_log(q, base), 0, 0, 0)
+        return log(Quaternion(q, 0.0, 0.0, 0.0))
 
     return NotImplemented
 
