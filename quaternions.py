@@ -256,7 +256,7 @@ class Quaternion():
 
         return NotImplemented
 
-    def __round__(self, ndigits=None) -> Quaternion:
+    def __round__(self, ndigits: None or int = None) -> Quaternion:
         """
         Return round(self, ndigits).
 
@@ -503,6 +503,10 @@ class Quaternion():
             imag = self.get_imag()
             return complex(real, imag)
 
+        elif self.is_scalar():
+            real, imag = self.real, 0.0
+            return complex(real, imag)
+
         return NotImplemented
 
     @property
@@ -658,17 +662,16 @@ class Quaternion():
             q = Quaternion(1)
             if x > 1:
                 for _ in range(x):
-                    q = q * self
+                    q = q.__mul__(self)
             elif x < -1:
                 for _ in range(-x):
-                    q = q * self.inverse()
+                    q = q.__mul__(self.inverse())
 
             return q
 
         elif isinstance(other, float):
-            a = self.scalar
             if self.is_scalar():
-                return Quaternion(pow(a, other), 0, 0, 0)
+                return Quaternion(pow(self.real, other), 0, 0, 0)
 
             theta = self.angle
             return (
