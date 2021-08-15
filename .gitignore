@@ -5,3 +5,7 @@
 # pycache folder #
 ##################
 __pycache__*
+
+# build folders #
+dist/*
+*.egg*
