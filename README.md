@@ -11,20 +11,22 @@ version [here](https://www.python.org/downloads/).
 
 ### The Quaternions module
 
-You can download the .zip file
-[here](https://github.com/zachartrand/Quaternions/archive/refs/heads/master.zip).
+Install with pip:
+```
+pip install quaternions-for-python
+```
 
-You can also clone the repository with the following terminal command:
-
-```bash
-$ git clone https://github.com/zachartrand/Quaternions.git
+If you want to build from source, you can clone the repository with the following
+terminal command:
+```
+git clone https://github.com/zachartrand/Quaternions.git
 ```
 
 ## How to use
 
-### Using the quaternions.py module
+### Using the quaternions module
 
-The quaternions.py module is designed to be imported to use quaternion numbers
+The quaternions module is designed to be imported to use quaternion numbers
 just like complex numbers in Python. The rest of this webpage assumes you
 import the class like this:
 
@@ -77,7 +79,7 @@ quaternions together uses the same syntax as ints and floats:
 
 Check the documentation for other useful methods of the Quaternion class.
 
-### Using the qmath.py module
+### Using the qmath module
 The qmath module contains some functions that are compatible with quaternions,
 similarly to how the cmath module works. These include the exponential function,
 the natural logarithm, and the pow function. It also includes a function,
@@ -85,7 +87,7 @@ rotate3d, that takes an iterable of coordinates and rotates them a given angle
 around a given axis (the z-axis by default). Here is an example rotating the
 point (1, 0, 0) around the z-axis:
 ```python
->>> import qmath
+>>> from quaternions import qmath
 >>>
 >>> p = (1, 0, 0)
 >>>
