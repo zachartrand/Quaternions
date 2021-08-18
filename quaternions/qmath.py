@@ -35,7 +35,7 @@ infk: Quaternion = Quaternion(0, 0, 0, float('inf'))
 
 
 def exp(q: Quaternion or float) -> Quaternion:
-    """Returns the exponential of a quaternion."""
+    """Return the exponential of a quaternion."""
     if isinstance(q, Quaternion):
         a = q.scalar
         if q.is_scalar():
