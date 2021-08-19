@@ -237,6 +237,8 @@ def rotate_Euler(
         degrees: When set to ``True``, this function interprets the parameter
             **angle** as degrees. Set this parameter to ``False`` to use angles
             in radians. Default is ``True``.
+
+    .. versionadded:: 1.1.0
     """
     # yaw: rotate around z-axis
     # pitch: rotate around y'-axis
