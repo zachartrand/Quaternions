@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 26 15:36:03 2021
-
-@author: Zach Chartrand <zachartrand999@gmail.com>
-
 This module contains the Quaternion class, a class based on the
 quaternion numbers. This class is designed to properly perform
 quaternion arithmetic with other quaternions and int and float type
@@ -12,10 +8,14 @@ quaternion vector the imaginary component belongs to, so in order to do
 arithmetic with complex numbers, they must be converted into a
 quaternion first.
 """
+# Metadata
+# --------
+# Created on Mon Apr 26 15:36:03 2021
+# @author: Zach Chartrand <zachartrand999@gmail.com>
 
 from __future__ import annotations
 
-__all__ = ['Quaternion', 'quaternionFromAngle']
+__all__ = ['Quaternion']
 
 from math import (
     hypot as _hypot,
@@ -33,24 +33,67 @@ from math import (
 from typing import Tuple, Iterable, Iterator
 
 
+def _makeListLen3(i: Iterable[float]) -> list:
+    """Makes sure points and axes of rotation have 3 coordinates."""
+    if not isinstance(i, list):
+        i = list(i)
+
+    if len(i) > 3:
+        i = i[:3]
+    elif len(i) < 3:
+        while len(i) < 3:
+            i.append(0.0)
+    return i
+
+
 class Quaternion():
     """
-    Creates a quaternion. Quaternions are an expansion of the complex
-    numbers, where there are four (4) components--the real component,
-    also known as the scalar part, and the imaginary components, which
-    together are known as the vector part. The vector part is made up
-    of three (3) components whose unit values are i, j, and k. The
-    rules for these values are as follows:
+    Quaternions are an expansion of the complex numbers, where there are
+    four (4) components--the real component, also known as the scalar part,
+    and the imaginary components, which together are known as the vector part.
+    The vector part is made up of three (3) components whose unit values
+    are `i`, `j`, and `k`. The rules for these values are as follows:
 
-        i**2 == j**2 == k**2 == -1
-        i*j == -j*i == k
-        j*k == -k*j == i
-        k*i == -i*k == j,
+      :math:`i^2 = j^2 = k^2 = -1`
+
+      :math:`jk = -kj = i`
+
+      :math:`ki = -ik = j`
+
+      :math:`ij = -ji = k`,
 
     which leads to the following statement:
 
-        i*j*k == -1.
+      :math:`ijk = -1`.
+
+    The descriptions will reference a quaternion of the form
+    :math:`a + bi + cj + dk`, where :math:`a`, :math:`b`, :math:`c`, and :math:`d`
+    are real numbers.
+
+    Parameters:
+        real: The real component (:math:`a`) of the quaternion.
+        i_component: The i component (:math:`b`) of the quaternion.
+        j_component: The j component (:math:`c`) of the quaternion.
+        k_component: The k component (:math:`d`) of the quaternion.
+
+    Each component can be returned by calling the attribute of the same name.
+
+    Example:
+        >>> q = Quaternion(1, -2, -3, 4)
+        >>> print(q)
+        (1 - 2i - 3j + 4k)
+        >>> q.real
+        1.0
+        >>> q.i
+        -2.0
+        >>> q.j
+        -3.0
+        >>> q.k
+        4.0
+
     """
+    ## Initialization ##
+    ####################
     def __init__(self, real: float = 0.0, i_component: float = 0.0,
                  j_component: float = 0.0, k_component: float = 0.0) -> None:
         self._real: float = float(real)
@@ -61,55 +104,108 @@ class Quaternion():
     # Make all the components read-only attributes.
     @property
     def real(self) -> float:
-        """
-        Returns the real component of the Quaternion.
-
-        For a quaternion of the form
-
-            a + bi + cj + dk,
-
-        this property returns 'a'.
-        """
+        """The real component of the Quaternion."""
         return self._real
 
     @property
     def i(self) -> float:
-        """
-        Returns the i-component of the Quaternion.
-
-        For a quaternion of the form
-
-            a + bi + cj + dk,
-
-        this property returns 'b'.
-        """
+        """The i component of the Quaternion."""
         return self._i
 
     @property
     def j(self) -> float:
-        """
-        Returns the j-component of the Quaternion.
-
-        For a quaternion of the form
-
-            a + bi + cj + dk,
-
-        this property returns 'c'.
-        """
+        """The j component of the Quaternion."""
         return self._j
 
     @property
     def k(self) -> float:
-        """
-        Returns the k-component of the Quaternion.
-
-        For a quaternion of the form
-
-            a + bi + cj + dk,
-
-        this property returns 'd'.
-        """
+        """The k component of the Quaternion."""
         return self._k
+
+    ### Magic methods. ###
+    ######################
+
+    ## Object data magic methods. ##
+    ################################
+    def __complex__(self) -> complex:
+        """
+        Return complex(self).
+
+        If only one of the vector components is nonzero, return the
+        quaternion as a complex number.
+        """
+        if self.is_complex():
+            real = self.real
+            imag = self.get_imag()
+            return complex(real, imag)
+
+        elif self.is_scalar():
+            real, imag = self.real, 0.0
+            return complex(real, imag)
+
+        raise ValueError(f"{self.__class__.__qualname__} is not scalar or complex.")
+
+    def __float__(self) -> float:
+        """
+        Return float(self).
+
+        If the quaternion is scalar, return the scalar component.
+        """
+        if self.is_scalar():
+            return self.real
+
+        raise ValueError(f"{self.__class__.__qualname__} is not scalar.")
+
+    def __hash__(self) -> int:
+        """
+        Return hash(self).
+
+        Works so that scalar quaternions have the same hash values as
+        int and float. Quaternions that have two of their imaginary
+        terms equal to zero (0) have the same hash values as complex
+        numbers.
+        """
+        if self.is_scalar():
+            return hash(self.real)
+        elif self.is_complex():
+            return hash(complex(self.real, self.get_imag()))
+        else:
+            return hash((self.real, self.i, self.j, self.k))
+
+    def __int__(self) -> int:
+        """
+        Return int(self).
+
+        If the quaternion is scalar, return the real component as
+        an integer.
+        """
+        if self.is_scalar():
+            return int(self.real)
+
+        raise ValueError(f"{self.__class__.__qualname__} is not scalar.")
+
+    def __iter__(self) -> Iterator[float]:
+        """
+        Return iter(self).
+
+        Return an iterator of the components of the quaternion.
+
+        The components are in the order of
+
+            real, i, j, k
+        """
+        return iter([self.real, self.i, self.j, self.k])
+
+    def __reversed__(self) -> Iterator[float]:
+        """
+        Return reversed(self).
+
+        Return an iterator of the components of the quaternion
+        in reverse order:
+
+            k, j, i, real
+        """
+        return reversed([self.real, self.i, self.j, self.k])
 
     def __repr__(self) -> str:
         """Return repr(self)."""
@@ -120,18 +216,18 @@ class Quaternion():
         """
         Return str(self).
 
-        Returns a string of the quaternion in the form
+        Return a string of the quaternion in the form
 
-            '(a + bi + cj + dk)',
+        ``'(a + bi + cj + dk)'``,
 
         where a, b, c, and d are floats. If there is no real component,
         it is left out of the string, and has the format
 
-            '(bi + cj + dk)'.
+            ``'(bi + cj + dk)'``.
         """
         # Helper functions.
         def _sign(x: float) -> str:
-            """Returns '+' or '-' based on whether x is positive or negative."""
+            """Return '+' or '-' based on whether x is positive or negative."""
             if _copysign(1.0, x) == -1.0:
                 return "-"
             else:
@@ -139,8 +235,8 @@ class Quaternion():
 
         def _num_to_str(x: float) -> str:
             """
-            Returns a string of x as an integer if x is a positive or
-            negative whole number, otherwise returns a float string.
+            Return a string of x as an integer if x is a positive or
+            negative whole number, otherwise return a float string.
             """
             if x.is_integer():
                 return str(int(x))
@@ -158,6 +254,8 @@ class Quaternion():
 
         return f'({q_str})'
 
+    ## Boolean magic methods ##
+    ###########################
     def __bool__(self) -> bool:
         """self != 0"""
         if (self.real, self.i, self.j, self.k) == (0.0, 0.0, 0.0, 0.0):
@@ -178,44 +276,47 @@ class Quaternion():
 
         return False
 
-    def __hash__(self) -> int:
+    def __ge__(self, other):
+        return NotImplemented
+
+    def __gt__(self, other):
+        return NotImplemented
+
+    def __le__(self, other):
+        return NotImplemented
+
+    def __lt__(self, other):
+        return NotImplemented
+
+    ## Mathematical magic methods with one mandatory input. ##
+    ##########################################################
+    def __abs__(self) -> float:
         """
-        Return hash(self).
+        Return abs(self).
 
-        Works so that scalar quaternions have the same hash values as
-        int and float. Quaternions that have two of their imaginary
-        terms equal to zero (0) have the same hash values as complex
-        numbers.
+        Return the magnitude of the quaternion.
         """
-        if self.is_scalar():
-            return hash(self.real)
-        elif self.is_complex():
-            return hash(complex(self.real, self.get_imag()))
-        else:
-            return hash((self.real, self.i, self.j, self.k))
+        return _hypot(self.real, self.i, self.j, self.k)
 
-    def __iter__(self) -> Iterator[float]:
+    def __ceil__(self) -> Quaternion:
         """
-        Return iter(self).
+        Return math.ceil(self).
 
-        Returns an iterator of the components of the quaternion.
-
-        The components are in the order of
-
-            real, i, j, k
+        Return the quaternion with all of its components rounded up
+        to the nearest integer.
         """
-        return iter([self.real, self.i, self.j, self.k])
+        return Quaternion(
+            _ceil(self.real), _ceil(self.i), _ceil(self.j), _ceil(self.k))
 
-    def __reversed__(self) -> Iterator[float]:
+    def __floor__(self) -> Quaternion:
         """
-        Return reversed(self).
+        Return math.floor(self).
 
-        Returns an iterator of the components of the quaternion
-        in reverse order:
-
-            k, j, i, real
+        Return the quaternion with all of its components rounded down
+        to the nearest integer.
         """
-        return reversed([self.real, self.i, self.j, self.k])
+        return Quaternion(
+            _floor(self.real), _floor(self.i), _floor(self.j), _floor(self.k))
 
     def __pos__(self) -> Quaternion:
         """Return +self."""
@@ -224,37 +325,6 @@ class Quaternion():
     def __neg__(self) -> Quaternion:
         """Return -self."""
         return Quaternion(-self.real, -self.i, -self.j, -self.k)
-
-    def __abs__(self) -> float:
-        """
-        Return abs(self).
-
-        Returns the magnitude of the quaternion.
-        """
-        return _hypot(self.real, self.i, self.j, self.k)
-
-    def __int__(self) -> int:
-        """
-        Return int(self).
-
-        If the quaternion is scalar, this returns the real component as
-        an integer.
-        """
-        if self.is_scalar():
-            return int(self.real)
-
-        return NotImplemented
-
-    def __float__(self) -> float:
-        """
-        Return float(self).
-
-        If the quaternion is scalar, returns the scalar component.
-        """
-        if self.is_scalar():
-            return self.real
-
-        return NotImplemented
 
     def __round__(self, ndigits: None or int = None) -> Quaternion:
         """
@@ -267,26 +337,8 @@ class Quaternion():
             round(self.real, ndigits), round(self.i, ndigits),
             round(self.j, ndigits), round(self.k, ndigits))
 
-    def __floor__(self) -> Quaternion:
-        """
-        Return math.floor(self).
-
-        Returns the quaternion with all of its components rounded down
-        to the nearest integer.
-        """
-        return Quaternion(
-            _floor(self.real), _floor(self.i), _floor(self.j), _floor(self.k))
-
-    def __ceil__(self) -> Quaternion:
-        """
-        Return math.ceil(self).
-
-        Returns the quaternion with all of its components rounded up
-        to the nearest integer.
-        """
-        return Quaternion(
-            _ceil(self.real), _ceil(self.i), _ceil(self.j), _ceil(self.k))
-
+    ## Mathematical magic methods with two mandatory inputs. ##
+    ###########################################################
     def __add__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self + other.
@@ -408,50 +460,11 @@ class Quaternion():
 
         return NotImplemented
 
-    def conjugate(self) -> Quaternion:
-        """
-        Returns the conjugate of self. This is analogous to the
-        complex conjugate, reversing the signs of the vector
-        components.
-        """
-        return Quaternion(self.real, -self.i, -self.j, -self.k)
-
-    def inverse(self) -> Quaternion:
-        """
-        Return 1/self.
-
-        Returns the inverse of the quaternion. The inverse of a
-        quaternion is defined as the conjugate divided by the norm
-        squared:
-            q.inverse() = q.conjugate()/(q.norm)**2.
-        """
-        # =====================================================================
-        # Added an algorithm similar to Python's algorithm for complex numbers
-        # to avoid overflow and underflow errors. Using this algorithm avoids
-        # squaring numbers and scales the components by the largest of the
-        # components, making the base numbers to work with between 0 and 1
-        # in magnitude.
-        # =====================================================================
-        max_component = max(
-            self.real.__abs__(), self.i.__abs__(), self.j.__abs__(),
-            self.k.__abs__())
-        real_ratio = self.real / max_component
-        i_ratio = self.i / max_component
-        j_ratio = self.j / max_component
-        k_ratio = self.k / max_component
-        denom = (real_ratio * self.real + i_ratio * self.i
-                 + j_ratio * self.j + k_ratio * self.k)
-
-        q_inverse = (
-            Quaternion(real_ratio, -i_ratio, -j_ratio, -k_ratio) / denom)
-
-        return q_inverse
-
     def __floordiv__(self, other: Quaternion or float or complex) -> Quaternion:
         """
         Return self // other.
 
-        If other is an int or float, returns the quaternion with each
+        If other is an int or float, return the quaternion with each
         component floor divided by other.
         """
         if isinstance(other, (int, float)):
@@ -466,7 +479,8 @@ class Quaternion():
         Return self/other.
 
         For division q1/q2, this assumes the order of multiplication
-        is q1 * 1/q2. To left-multiply the denominator, enter 1/q2 * q1.
+        is q1 * 1/q2. To left-multiply the denominator, enter 1/q2 * q1 or
+        q2.inverse() * q1.
         """
         if isinstance(other, (int, float)):
             return Quaternion(
@@ -491,158 +505,8 @@ class Quaternion():
 
         return NotImplemented
 
-    def __complex__(self) -> complex:
-        """
-        Return complex(self).
-
-        If only one of the vector components is nonzero, this returns the
-        quaternion as a complex number.
-        """
-        if self.is_complex():
-            real = self.real
-            imag = self.get_imag()
-            return complex(real, imag)
-
-        elif self.is_scalar():
-            real, imag = self.real, 0.0
-            return complex(real, imag)
-
-        return NotImplemented
-
-    @property
-    def scalar(self) -> float:
-        """Return the real part of the quaternion."""
-        return self.real
-
-    @property
-    def vector(self) -> Quaternion:
-        """Return the vector part of the quaternion."""
-        return Quaternion(0, self.i, self.j, self.k)
-
-    @property
-    def norm(self) -> float:
-        """Returns the norm (magnitude) of the quaternion."""
-        return self.__abs__()
-
-    @property
-    def vector_norm(self) -> float:
-        """Returns the norm of the vector part of the quaternion."""
-        return self.vector.__abs__()
-
-    @property
-    def angle(self) -> float:
-        """
-        Returns the angle of the quaternion.
-
-        Quaternions can be expressed as
-
-            norm*(cos(theta) + u*sin(theta))
-
-        where u is a 3D unit vector. This returns the angle theta from
-        this expression.
-        """
-        return _atan2(self.vector.__abs__(), self.real)
-
-    @property
-    def versor(self) -> Quaternion:
-        """Returns the quaternion normalized to a magnitude of one (1)."""
-        versor = self
-        while versor.__abs__() != 1.0:
-            # Doesn't always divide to norm 1 on the first division.
-            versor = versor/versor.__abs__()
-        return versor
-
-    @property
-    def components(self) -> Tuple[float]:
-        """
-        Returns the components of the quaternion as a tuple in the order
-
-            real, i, j, k
-        """
-        return (self.real, self.i, self.j, self.k)
-
-    def unit_vector(self) -> Quaternion:
-        """
-        Return the vector part of the quaternion normalized to a
-        magnitude of one (1). Returns the zero quaternion if the
-        magnitude of the quaternion is zero (0).
-        """
-        if (self.i, self.j, self.k) == (0.0, 0.0, 0.0):
-            return Quaternion(0, 0, 0, 0)
-        else:
-            v = Quaternion(0, self.i, self.j, self.k)
-            return v.versor
-
-    def unit_quaternion(self) -> Quaternion or None:
-        """
-        Return the quaternion normalized to unity (1).
-
-        If the quaternion is a zero (0) quaternion, returns None.
-        """
-        if self.__abs__() != 0.0:
-            return self.versor
-
-        return None
-
-    def get_vector_components(self) -> Tuple[float]:
-        """
-        Return the vector components of the Quaternion as a tuple
-        formatted as
-
-            (i, j, k).
-        """
-        return (self.i, self.j, self.k)
-
-    def is_scalar(self) -> bool:
-        """
-        Returns True if the vector components all equal zero.
-        Otherwise, returns False.
-        """
-        if (self.i, self.j, self.k) == (0.0, 0.0, 0.0):
-            return True
-
-        return False
-
-    def is_vector(self) -> bool:
-        """
-        Returns True if the scalar part is zero and at least one of
-        the vector components is nonzero. Otherwise, returns False.
-        """
-        if self.real == 0.0 and (
-                self.i != 0.0 or self.j != 0.0 or self.k != 0.0):
-            return True
-
-        return False
-
-    def is_complex(self) -> bool:
-        """
-        Returns True if only one of the i, j, and k components is
-        nonzero. Otherwise, returns False.
-        """
-        if (self.i, self.j, self.k) != (0.0, 0.0, 0.0):
-            if (0.0, 0.0) in (
-                    (self.i, self.j), (self.j, self.k), (self.i, self.k)):
-                return True
-
-        return False
-
-    def get_imag(self) -> float:
-        """
-        Returns the imaginary component of the quaternion if only one
-        of the imaginary components is nonzero. If the quaternion is
-        scalar, this returns 0.0. Otherwise, returns None.
-        """
-        if self.is_complex():
-            for component in (self.i, self.j, self.k):
-                if component != 0.0:
-                    return component
-        elif self.is_scalar():
-            return 0.0
-        else:
-            return None
-
     def __pow__(self, other: Quaternion or float,
-                mod: None or float = None) -> Quaternion:
+                mod: None = None) -> Quaternion:
         """
         Return pow(self, other, mod).
 
@@ -651,7 +515,7 @@ class Quaternion():
         if mod is not None:
             raise ValueError(
                 f"{self.__class__.__qualname__}s are not set up "
-                "for modular arithmetic.")
+              + "for modular arithmetic.")
         if (isinstance(other, int)
                 or (isinstance(other, float) and other.is_integer())):
             x = int(other)
@@ -695,47 +559,223 @@ class Quaternion():
 
         return NotImplemented
 
+    def __mod__(self, other):
+        return NotImplemented
 
-def _makeListLen3(i: Iterable[float]) -> list:
-    """Makes sure points and axes of rotation have 3 coordinates."""
-    if not isinstance(i, list):
-        i = list(i)
+    ## Normal methods ##
+    ####################
+    def conjugate(self) -> Quaternion:
+        """
+        Return the conjugate of self. This is analogous to the
+        complex conjugate, reversing the signs of the vector
+        components.
+        """
+        return Quaternion(self.real, -self.i, -self.j, -self.k)
 
-    if len(i) > 3:
-        i = i[:3]
-    elif len(i) < 3:
-        while len(i) < 3:
-            i.append(0.0)
-    return i
+    def get_imag(self) -> float:
+        """
+        Return the imaginary component of the quaternion if only one
+        of the imaginary components is nonzero. If the quaternion is
+        scalar, return ``0.0``. Otherwise, return ``None``.
+        """
+        if self.is_complex():
+            for component in (self.i, self.j, self.k):
+                if component != 0.0:
+                    return component
+        elif self.is_scalar():
+            return 0.0
+        else:
+            return None
 
+    def get_vector_components(self) -> Tuple[float]:
+        """
+        Return the vector components of the Quaternion as a tuple
+        formatted as ``(i, j, k)``.
+        """
+        return (self.i, self.j, self.k)
 
-def quaternionFromAngle(
-        angle: float, vector: Iterable[float],
-        norm: float = 1.0, degrees: bool = True) -> Quaternion:
-    """
-    Returns a quaternion from an angle and vector.
+    def inverse(self) -> Quaternion:
+        """
+        Return 1/self.
 
-    Quaternions can be expressed as
+        Return the inverse of the quaternion. The inverse of a
+        quaternion is defined as the conjugate divided by the norm
+        squared::
 
-        norm*(cos(theta) + u*sin(theta)),
+            q.inverse() = q.conjugate()/(q.norm)**2
 
-    where u is a 3D unit vector. This function takes an angle and a vector to
-    create a quaternion. If you want a quaternion with a different norm than
-    one (1), you can change the 'norm' argument. By default, angles are entered
-    in degrees. If you want to enter an angle in radians, set 'degrees' to
-    False.
-    """
-    if degrees:
-        angle %= 360
-        angle = angle * _pi / 180
-    else:
-        angle %= (_pi*2)
+        """
+        # =====================================================================
+        # Added an algorithm similar to Python's algorithm for complex numbers
+        # to avoid overflow and underflow errors. Using this algorithm avoids
+        # squaring numbers and scales the components by the largest of the
+        # components, making the base numbers to work with between 0 and 1
+        # in magnitude.
+        # =====================================================================
+        max_component = max(
+            self.real.__abs__(), self.i.__abs__(), self.j.__abs__(),
+            self.k.__abs__())
+        real_ratio = self.real / max_component
+        i_ratio = self.i / max_component
+        j_ratio = self.j / max_component
+        k_ratio = self.k / max_component
+        denom = (real_ratio * self.real + i_ratio * self.i
+                 + j_ratio * self.j + k_ratio * self.k)
 
-    i, j, k = _makeListLen3(vector)
-    u = Quaternion(0, i, j, k)
-    if abs(u) != 1.0:
-        u = u.versor
+        q_inverse = (
+            Quaternion(real_ratio, -i_ratio, -j_ratio, -k_ratio) / denom)
 
-    q = norm*(_cos(angle) + _sin(angle)*u)
+        return q_inverse
 
-    return q
+    def unit_quaternion(self) -> Quaternion:
+        """
+        Return the quaternion normalized to magnitude one (1).
+
+        If the quaternion is a zero (0) quaternion, return the zero quaternion.
+        """
+        if self.__abs__() != 0.0:
+            return self.versor
+
+        return Quaternion(0)
+
+    def unit_vector(self) -> Quaternion:
+        """
+        Return the vector part of the quaternion normalized to a
+        magnitude of one (1). Return the zero quaternion if the
+        magnitude of the quaternion is zero (0).
+        """
+        if (self.i, self.j, self.k) == (0.0, 0.0, 0.0):
+            return Quaternion(0, 0, 0, 0)
+        else:
+            v = Quaternion(0, self.i, self.j, self.k)
+            return v.versor
+
+    ## Boolean methods ##
+    #####################
+    def is_complex(self) -> bool:
+        """
+        Return ``True`` if only one of the *i*, *j*, and *k* components is
+        nonzero. Otherwise, return ``False``.
+        """
+        if (self.i, self.j, self.k) != (0.0, 0.0, 0.0):
+            if (0.0, 0.0) in (
+                    (self.i, self.j), (self.j, self.k), (self.i, self.k)):
+                return True
+
+        return False
+
+    def is_scalar(self) -> bool:
+        """
+        Return ``True`` if the vector components all equal zero.
+        Otherwise, return ``False``.
+        """
+        if (self.i, self.j, self.k) == (0.0, 0.0, 0.0):
+            return True
+
+        return False
+
+    def is_vector(self) -> bool:
+        """
+        Return ``True`` if the scalar part is zero and at least one of
+        the vector components is nonzero. Otherwise, return ``False``.
+        """
+        if self.real == 0.0 and (
+                self.i != 0.0 or self.j != 0.0 or self.k != 0.0):
+            return True
+
+        return False
+
+    ## Attributes ##
+    ################
+    @property
+    def angle(self) -> float:
+        """The angle of the quaternion in radians."""
+        return _atan2(self.vector.__abs__(), self.real)
+
+    @property
+    def angle_in_degrees(self) -> float:
+        """The angle of the quaternion in degrees."""
+        return self.angle * 180 / _pi
+
+    angle_in_radians = angle
+
+    @property
+    def components(self) -> Tuple[float]:
+        """
+        The components of the quaternion as a tuple in the order
+        ``(real, i, j, k)``.
+        """
+        return (self.real, self.i, self.j, self.k)
+
+    @property
+    def norm(self) -> float:
+        """
+        The norm (magnitude) of the quaternion.
+        """
+        return self.__abs__()
+
+    @property
+    def scalar(self) -> Quaternion:
+        """The real part of the quaternion."""
+        return Quaternion(self.real, 0, 0, 0)
+
+    @property
+    def vector(self) -> Quaternion:
+        """The vector part of the quaternion."""
+        return Quaternion(0, self.i, self.j, self.k)
+
+    @property
+    def vector_norm(self) -> float:
+        """The norm of the vector part of the quaternion."""
+        return self.vector.__abs__()
+
+    @property
+    def versor(self) -> Quaternion:
+        """The quaternion normalized to a magnitude of one (1)."""
+        versor = self
+        for _ in range(10):  # Prevents an infinite loop.
+            # Doesn't always divide to norm 1 on the first division.
+            versor = versor/versor.__abs__()
+            if versor.norm == 1.0:
+                break
+        return versor
+
+    ## Class methods ##  # Only one so far.
+    ###################
+    @classmethod
+    def from_angle(
+            cls, angle: float, vector: Iterable[float],
+            norm: float = 1.0, degrees: bool = True) -> Quaternion:
+        """
+        Return a quaternion from an angle and vector.
+
+        Quaternions can be expressed as ``norm*(cos(theta) + u*sin(theta))``,
+        where ``u`` is a 3D unit vector. This function takes an angle and a vector to
+        create a quaternion. If you want a quaternion with a different norm than
+        one (1), you can change the ``norm`` argument. By default, angles are entered
+        in degrees. If you want to enter an angle in radians, set ``degrees`` to
+        False.
+        """
+        if degrees:
+            angle %= 360
+            angle = angle * _pi / 180
+        else:
+            angle %= (_pi*2)
+
+        if angle == 0.0:
+            return cls(1.0)
+        else:
+            i, j, k = _makeListLen3(vector)
+            u = cls(0, i, j, k)
+            if abs(u) == 0:
+                raise ValueError(
+                    'The vector must be a nonzero vector.')
+            elif abs(u) != 1.0:
+                u = u.versor
+
+            q = _cos(angle) + _sin(angle)*u
+
+            if norm != 1.0:
+                q = norm * q.versor
+
+            return q
