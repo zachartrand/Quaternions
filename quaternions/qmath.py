@@ -37,7 +37,7 @@ infk: Quaternion = Quaternion(0, 0, 0, float('inf'))
 def exp(q: Quaternion or float) -> Quaternion:
     """Return the exponential of a quaternion."""
     if isinstance(q, Quaternion):
-        a = q.scalar
+        a = q.real
         if q.is_scalar():
             return Quaternion(_exp(a), 0, 0, 0)
 
@@ -55,7 +55,7 @@ def log(q: Quaternion or float, base: float = e) -> Quaternion:
     """
     Return the logarithm of a quaternion to the given base.
 
-    If the base is not specified, returns the natural logarithm (base e) of the
+    If the base is not specified, returns the natural logarithm (base *e*) of the
     quaternion.
     """
     if isinstance(q, Quaternion):
