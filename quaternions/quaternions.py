@@ -694,10 +694,10 @@ class Quaternion():
 
         Quaternions can be expressed as
 
-            norm*(cos(theta) + u*sin(theta))
+        ``norm*(cos(theta) + u*sin(theta))``
 
         where u is a 3D unit vector. This returns the angle theta from
-        this expression.
+        this expression. Can also be called with ``Quaternion.angle_in_radians``.
         """
         return _atan2(self.vector.__abs__(), self.real)
 
@@ -705,6 +705,8 @@ class Quaternion():
     def angle_in_degrees(self) -> float:
         """Return the angle of the quaternion in degrees."""
         return self.angle * 180 / _pi
+
+    angle_in_radians = angle
 
     @property
     def components(self) -> Tuple[float]:
