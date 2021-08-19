@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Similar to the built-in module cmath, this module has definitions of
+Similar to the built-in module :py:mod:`cmath`, this module has definitions of
 mathematical functions expanded to work with quaternions.
 """
 # Metadata
@@ -100,12 +100,27 @@ def log10(q: Quaternion or float) -> Quaternion:
 
 
 def sqrt(q: Quaternion or float) -> Quaternion:
-    """Return the square root of q."""
-    if q.is_scalar() and q.real < 0:
+    """Return the square root of the quaternion."""
+    sqrt_real = 0.0
+    if isinstance(q, Quaternion):
+        if q.is_scalar() and q.real < 0:
+            real = q.real
+            sqrt_real = (-q.real)**0.5
+    elif isinstance(q, (int, float)):
+        if q < 0:
+            real = q
+            sqrt_real = (-q)**0.5
+
+    if sqrt_real:
+        if len(str(sqrt_real)) <= 4:
+            sqrt_string = str(sqrt_real)
+        else:
+            sqrt_string = f"{sqrt_real:.6f}..."
+
         raise ValueError(
-            "Negative real quaternions have an infinite number "
-          + f"of square roots.\nThe square root of {q.real} is the sphere "
-          + f"of radius {abs(q)**0.5:.4f}... centered at the origin.")
+            "Negative real quaternions have an infinite number of square roots.\n"
+            + f"The square root of {real} is the sphere of radius {sqrt_string} "
+            + "centered at the origin.")
 
     return pow(q, 0.5)
 
@@ -115,18 +130,27 @@ def rotate3d(
         axis: Iterable[float] = (0.0, 0.0, 1.0), rounding: int = -1,
         degrees: bool = True) -> Tuple[float]:
     """
+    Rotate a point around an axis.
+
     Take a point in 3d space represented as a tuple or list of three
     (3) values and rotate it by an angle around a given axis vector.
-    The axis of rotation is the z-axis (0, 0, 1) by default. For the
-    point and axis parameters, if only one value is given, the value
+
+    Parameters:
+        point: The point to rotate. The format for the coordinates is ``(x, y, z)``.
+        angle: The angle of rotation. By default, angle is set to be input in
+            degrees. See the **degrees** parameter if you want to use radians instead.
+        axis: The axis to rotate the point around. By default, this is the
+            z-axis ``(0, 0, 1)``.
+        rounding: The number of decimal points the result will be rounded to.
+            Default value is -1, which does not round the end result.
+        degrees: When set to ``True``, this function interprets the parameter
+            **angle** as degrees. Set this parameter to ``False`` to use angles
+            in radians. Default is ``True``.
+
+    For the point and axis parameters, if only one value is given, the value
     will be assumed to be an x-coordinate with the y- and z-coordinates
     equal to zero (0). If two values are given, they will be assumed to
     be x- and y-coordinates with the z-coordinate equal to zero (0).
-    By default, this function does not round the result. If you wish to
-    round the result to a number of decimal places, change the rounding
-    argument to the number of decimal places you wish to round to.
-    By default, angle is set to be input in degrees. If you wish to use
-    radians, set 'degrees' equal to False.
     """
     if len(point) <= 3 and len(axis) <= 3:
         p = Quaternion(0, *_makeListLen3(point))
@@ -198,6 +222,21 @@ def rotate_Euler(
 
     This function uses the rotation convention of z-y'-x", rotating yaw,
     then pitch, then roll.
+
+    Parameters:
+        point: The point to rotate. The format for the coordinates is ``(x, y, z)``.
+        yaw: The angle of rotation around the z-axis.
+        pitch: The angle of rotation around the y'-axis. The y'-axis is the y-axis
+            after the yaw rotation has been applied.
+        roll: The angle of rotation around the x"-axis. The x"-axis is the x-axis
+            after both the yaw and pitch rotations.
+        x_axis: The initial x-axis of the coordinate system that **point** belongs
+            to. Default value is ``(1, 0, 0)``.
+        z_axis: The initial z-axis of the coordinate system that **point** belongs
+            to. Default value is ``(0, 0, 1)``.
+        degrees: When set to ``True``, this function interprets the parameter
+            **angle** as degrees. Set this parameter to ``False`` to use angles
+            in radians. Default is ``True``.
     """
     # yaw: rotate around z-axis
     # pitch: rotate around y'-axis
