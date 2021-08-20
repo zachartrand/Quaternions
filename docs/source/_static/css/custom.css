@@ -1,0 +1,35 @@
+:root {
+  --color-descname: #2980b9eb;
+  --color-link-visited: #84b6e1;
+  --color-icon-home-visited: #2980b9;
+  --color-icon-home-hover: #3091d1;
+}
+
+html.writer-html4 .rst-content dl:not(.docutils) .property, html.writer-html5 .rst-content
+dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple)
+.property {
+  padding-right: 4px;
+  color: var(--color-descname)
+}
+
+.descname, .sig-name, .sig-param {
+  font-size: 105%;
+  padding: 0 1px 0 2px;
+}
+
+.descclassname {
+  color: #000a;
+  font-size: 90%;
+}
+
+.rst-content a.reference:visited, .rst-content a.internal:visited {
+  color: var(--color-link-visited);
+}
+
+.rst-content .wy-breadcrumbs a:visited {
+  color: var(--color-icon-home-visited);
+}
+
+.rst-content .wy-breadcrumbs a:hover {
+  color: var(--color-icon-home-hover);
+}
