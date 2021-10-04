@@ -2,3 +2,19 @@
 ---
 
 @import "{{ site.theme }}";
+
+.wrapper {
+  width: 800px;
+}
+
+h1.title {
+  font-style: normal;
+}
+
+.highlight {
+  background-color: #3b3b3b;
+}
+
+.markdown-body pre {
+  box-shadow: none;
+}
