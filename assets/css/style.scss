@@ -3,8 +3,9 @@
 
 @import "{{ site.theme }}";
 
-.wrapper {
-  width: 800px;
+code, pre {
+  font-family: monospace;
+  font-size: 1.1em;
 }
 
 h1.title {
@@ -21,4 +22,8 @@ h1.title {
 
 .markdown-body pre.lines {
   margin-right: 0;
+}
+
+.wrapper {
+  width: 800px;
 }
