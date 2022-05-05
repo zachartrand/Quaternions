@@ -11,3 +11,6 @@ dist/*
 
 # archive folder - for old files #
 archive
+
+# ipynb checkpoints #
+*/.ipynb_checkpoints
