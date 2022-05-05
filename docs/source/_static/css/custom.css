@@ -1,5 +1,6 @@
 :root {
   --color-descname: #2980b9eb;
+  --color-code-block: #e67e22;
   --color-link-visited: #84b6e1;
   --color-icon-home-visited: #2980b9;
   --color-icon-home-hover: #3091d1;
@@ -20,6 +21,11 @@ dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.
 .descclassname {
   color: #000a;
   font-size: 90%;
+}
+
+.rst-content code:not(.xref),
+.rst-content tt.literal:not(.xref) {
+  color: var(--color-code-block)
 }
 
 .rst-content a.reference:visited, .rst-content a.internal:visited {
