@@ -744,7 +744,7 @@ class Quaternion():
         # ==============================================================
         # Added an algorithm similar to Python's algorithm for complex
         # numbers to avoid overflow and underflow errors. Using this
-        # algorithm avoids squaring numbers and scales the components
+        # algorithm avoids squaring numbers and scales each component
         # by the largest of the components, making the base numbers to
         # work with between 0 and 1 in magnitude.
         # ==============================================================
