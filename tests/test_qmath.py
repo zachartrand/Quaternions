@@ -20,13 +20,13 @@ class TestQmathFunctions(unittest.TestCase):
     def test_exp(self):
         self.assertEqual(qmath.exp(1), qmath.e)
         self.assertEqual(qmath.exp(Quaternion(1)), qmath.e)
-        self.assertEqual(qmath.exp(q), exp_q)
+        self.assertAlmostEqual(qmath.exp(q), exp_q, places=12)
 
     def test_log(self):
         self.assertEqual(qmath.log(1), 0)
         self.assertEqual(qmath.log(Quaternion(1)), 0)
-        self.assertEqual(qmath.log(q), log_q)
-        self.assertEqual(qmath.log10(q), log10_q)
+        self.assertAlmostEqual(qmath.log(q), log_q, places=12)
+        self.assertAlmostEqual(qmath.log10(q), log10_q, places=12)
 
     def test_sqrt(self):
         self.assertEqual(qmath.sqrt(q), q**0.5)
@@ -39,5 +39,5 @@ class TestQmathFunctions(unittest.TestCase):
         self.assertEqual(qmath.rotate3d(p, 360, rounding=12), (1.0, 0.0, 0.0))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
