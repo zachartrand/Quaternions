@@ -24,6 +24,18 @@ Rotation functions
 
 .. autofunction:: rotate_Euler
 
+   .. versionadded:: 1.1.0
+
+Other functions
+---------------
+.. autofunction:: cross_product
+
+   .. versionadded:: 1.1.0
+
+.. autofunction:: dot_product
+
+   .. versionadded:: 1.1.0
+
 Constants
 ---------
 .. data:: pi
