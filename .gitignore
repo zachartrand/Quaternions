@@ -12,5 +12,5 @@ dist/*
 # archive folder - for old files #
 archive
 
-# docs folder - remove once documentation is complete #
-docs
+# ipynb checkpoints #
+*.ipynb_checkpoints
