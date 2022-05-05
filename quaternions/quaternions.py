@@ -24,11 +24,13 @@ from math import (
     copysign as _copysign,
     exp as _exp,
     cos as _cos,
-    acos as _acos,
+    atan2 as _atan2,
     sin as _sin,
     pi as _pi,
     log as _log,
     isclose as _isclose,
+    degrees as _degrees,
+    radians as _radians,
 )
 
 from typing import Tuple, Iterable, Iterator
@@ -227,7 +229,7 @@ class Quaternion():
         #
         # Example: for the quaternion (1 - 2i - 3j + 4k), assuming the
         # Quaternion object is imported as Quaternion, this function
-        # will return the following string: "Quaternion(1, -2, -3, 4)".
+        # will return the following string: "Quaternion(1.0, -2.0, -3.0, 4.0)".
 
         return (f"{self.__class__.__qualname__}("
                 + f"{self.real}, {self.i}, {self.j}, {self.k})")
@@ -616,6 +618,12 @@ class Quaternion():
                 f"{self.__class__.__qualname__}s are not set up "
                 + "for modular arithmetic.")
 
+        # For the zero quaternion, return the zero quaternion if other
+        # is equal to anything other than zero.
+        if ((self.real, self.i, self.j, self.k) == (0.0, 0.0, 0.0, 0.0)
+            and other != 0.0):
+            return self
+
         # For positive integer exponents (n), multiply one (1) by the
         # quaternion n times.
         # For negative integer exponents (-n), multiply one (1) by the
@@ -656,11 +664,11 @@ class Quaternion():
             # quaternion reduced to norm one (see the unit_vector()
             # method).
             theta = other * self.angle
-            return (
-                pow(self.__abs__(), other) * (
-                    _cos(theta) + self.unit_vector().__mul__(_sin(theta))
-                )
-            )
+            new_norm = pow(self.norm, other)
+            v = self.unit_vector()
+
+            return new_norm * (_cos(theta) + v*_sin(theta))
+
 
         elif isinstance(other, Quaternion):
             # Avoid more complicated math if the exponent is real.
@@ -750,7 +758,8 @@ class Quaternion():
                  + j_ratio * self.j + k_ratio * self.k)
 
         q_inverse = (
-            Quaternion(real_ratio, -i_ratio, -j_ratio, -k_ratio) / denom)
+            Quaternion(real_ratio/denom, -i_ratio/denom,
+                       -j_ratio/denom, -k_ratio/denom))
 
         return q_inverse
 
@@ -818,12 +827,19 @@ class Quaternion():
     @property
     def angle(self) -> float:
         """The angle of the quaternion in radians."""
-        return _acos(self.real/self.__abs__())
+        # NOTE: This uses atan2 over acos due to inaccurate calculations
+        # near 0 and pi radians for acos. See here:
+        #
+        #   https://en.wikipedia.org/wiki/Inverse_trigonometric_functions#Numerical_accuracy
+        #
+        vector_norm = _hypot(self.i, self.j, self.k)
+
+        return _atan2(vector_norm, self.real)
 
     @property
     def angle_in_degrees(self) -> float:
         """The angle of the quaternion in degrees."""
-        return self.angle * (180 / _pi)
+        return _degrees(self.angle)
 
     angle_in_radians = angle
 
@@ -884,30 +900,38 @@ class Quaternion():
         degrees. If you want to enter an angle in radians, set
         ``degrees`` to False.
         """
-        # Convert degrees to radians if necessary.
+        # Get angle in both degrees and radians. Use degrees for
+        # conditional statements and radians for calculations.
         if degrees:
-            angle = angle / 180 * _pi
+            angle_in_degrees = angle
+        else:
+            angle_in_degrees = _degrees(angle)
+
+        angle_in_degrees = angle_in_degrees % 180.0  # Do not use fmod here.
 
         # Sine of 0.0 is 0.0 and cosine of 0.0 is 1.0, so the resulting
         # quaternion is a scalar equal to the norm.
-        if angle == 0.0:
+        if _isclose(angle_in_degrees, 0.0):
             return cls(norm)
 
         i, j, k = _makeListLen3(vector)
         # If the vector is the zero vector, only the scalar part
         # remains.
         if _isclose(i, 0.0) and _isclose(j, 0.0) and _isclose(k, 0.0):
-            return cls(_cos(angle) * norm)
+            return cls(_cos(angle)*norm)
 
-        # Create a vector quaternion from the vector parameter and make
-        # sure the vector magnitude is one (1).
-        u = cls(0, i, j, k)
-        if abs(u) != 1.0:
-            u = u.versor
+        norm_v = _hypot(i, j, k)
+        # If angle is 90 degrees, the quaternion is a vector quaternion,
+        # i.e. the real part is zero (0).
+        if _isclose(angle_in_degrees, 90.0):
+            return norm*cls(0, i/norm_v, j/norm_v, k/norm_v)
 
-        q = _cos(angle) + _sin(angle)*u
-
-        if norm != 1.0:
-            q = norm * q
+        if degrees:
+            angle_in_radians = _radians(angle)
+        else:
+            angle_in_radians = angle
+        sine = _sin(angle_in_radians)
+        q = norm*cls(_cos(angle_in_radians), i*sine/norm_v,
+                     j*sine/norm_v, k*sine/norm_v)
 
         return q
