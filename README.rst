@@ -1,5 +1,8 @@
 Quaternions
 ###########
+.. image:: https://readthedocs.org/projects/quaternions-for-python/badge/?version=latest
+  :target: https://quaternions-for-python.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
 
 Class and mathematical functions for quaternion numbers.
 
