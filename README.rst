@@ -90,11 +90,13 @@ Using the qmath module
 ----------------------
 
 The qmath module contains some functions that are compatible with quaternions,
-similarly to how the cmath module works. These include the exponential function,
-the natural logarithm, and the pow function. It also includes a function,
-rotate3d, that takes an iterable of coordinates and rotates them a given angle
-around a given axis (the z-axis by default). Here is an example rotating the
-point (1, 0, 0) around the z-axis:
+similarly to how the `cmath`_ module works. These include the exponential function
+and the natural logarithm. It also includes a function, rotate3d, that takes
+an iterable of coordinates and rotates them a given angle around a given axis
+(the z-axis by default). Here is an example rotating the point (1, 0, 0)
+around the z-axis:
+
+.. _cmath: https://docs.python.org/3.10/library/cmath.html
 
 >>> from quaternions import qmath
 >>>
