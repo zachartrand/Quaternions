@@ -17,6 +17,8 @@ from __future__ import annotations
 
 __all__ = ['Quaternion']
 
+from numbers import Number as _Number
+
 from math import (
     hypot as _hypot,
     floor as _floor,
@@ -97,14 +99,22 @@ class Quaternion():
         4.0
 
     """
+
+    __slots__ = ("_real", "_i", "_j", "_k")
+
     ## Initialization ##
     ####################
-    def __init__(self, real: float = 0.0, i_component: float = 0.0,
-                 j_component: float = 0.0, k_component: float = 0.0) -> None:
-        self._real: float = float(real)
+    # Quaternions are a type of number, so make it immutable like
+    # other numeric types. Use __new__ instead of __init__.
+    def __new__(cls, real_component: float = 0.0, i_component: float = 0.0,
+                j_component: float = 0.0, k_component: float = 0.0):
+        self = object.__new__(cls)
+        self._real: float = float(real_component)
         self._i: float = float(i_component)
         self._j: float = float(j_component)
         self._k: float = float(k_component)
+
+        return self
 
     # Make all the components read-only attributes.
     @property
@@ -569,8 +579,10 @@ class Quaternion():
         # Division by an int/float distibutes through each component
         # just like scalar multiplication.
         if isinstance(other, (int, float)):
+            inv_other = other**-1
             return Quaternion(
-                self.real/other, self.i/other, self.j/other, self.k/other)
+                self.real*inv_other, self.i*inv_other,
+                self.j*inv_other, self.k*inv_other)
 
         # See __add__ for complex logic.
         elif isinstance(other, complex):
@@ -664,7 +676,7 @@ class Quaternion():
             # quaternion reduced to norm one (see the unit_vector()
             # method).
             theta = other * self.angle
-            new_norm = pow(self.norm, other)
+            new_norm = pow(self.__abs__(), other)
             v = self.unit_vector()
 
             return new_norm * (_cos(theta) + v*_sin(theta))
@@ -683,7 +695,7 @@ class Quaternion():
             # where ln is the natural logarithm, ln(q) = ln(||q||) +
             # v*phi, and exp is the exponential function (see the exp()
             # function in the qmath module).
-            ln = _log(self.norm) + self.unit_vector()*self.angle
+            ln = _log(self.__abs__()) + self.unit_vector()*self.angle
             q = ln * other
             theta = q.vector_norm
             pow_q = (
@@ -747,19 +759,22 @@ class Quaternion():
         # algorithm avoids squaring numbers and scales each component
         # by the largest of the components, making the base numbers to
         # work with between 0 and 1 in magnitude.
+        #
+        # UPDATE 20 Jul 2022: Changed float divisions to multiplications
+        # for faster calculations
         # ==============================================================
-        max_component = max(
-            abs(self.real), abs(self.i), abs(self.j), abs(self.k))
-        real_ratio = self.real / max_component
-        i_ratio = self.i / max_component
-        j_ratio = self.j / max_component
-        k_ratio = self.k / max_component
-        denom = (real_ratio * self.real + i_ratio * self.i
-                 + j_ratio * self.j + k_ratio * self.k)
+        inv_max_component = (max(
+            abs(self.real), abs(self.i), abs(self.j), abs(self.k)))**-1
+        real_ratio = self.real * inv_max_component
+        i_ratio = self.i * inv_max_component
+        j_ratio = self.j * inv_max_component
+        k_ratio = self.k * inv_max_component
+        inv_denom = (real_ratio * self.real + i_ratio * self.i
+                 + j_ratio * self.j + k_ratio * self.k)**-1
 
         q_inverse = (
-            Quaternion(real_ratio/denom, -i_ratio/denom,
-                       -j_ratio/denom, -k_ratio/denom))
+            Quaternion(real_ratio*inv_denom, -i_ratio*inv_denom,
+                       -j_ratio*inv_denom, -k_ratio*inv_denom))
 
         return q_inverse
 
@@ -879,9 +894,10 @@ class Quaternion():
         # Doesn't always divide to norm 1 on the first division.
         # Attempt at most ten (10) times to reduce to norm one (1).
         for _ in range(10):
-            versor = versor/versor.__abs__()
-            if versor.norm == 1.0:
+            versor = versor*(versor.__abs__()**-1)
+            if versor.__abs__() == 1.0:
                 break
+
         return versor
 
     ## Class methods ##  # Only one so far.
@@ -920,18 +936,20 @@ class Quaternion():
         if _isclose(i, 0.0) and _isclose(j, 0.0) and _isclose(k, 0.0):
             return cls(_cos(angle)*norm)
 
-        norm_v = _hypot(i, j, k)
+        inv_norm_v = _hypot(i, j, k)**-1
         # If angle is 90 degrees, the quaternion is a vector quaternion,
         # i.e. the real part is zero (0).
         if _isclose(angle_in_degrees, 90.0):
-            return norm*cls(0, i/norm_v, j/norm_v, k/norm_v)
+            return norm*cls(0, i*inv_norm_v, j*inv_norm_v, k*inv_norm_v)
 
         if degrees:
             angle_in_radians = _radians(angle)
         else:
             angle_in_radians = angle
         sine = _sin(angle_in_radians)
-        q = norm*cls(_cos(angle_in_radians), i*sine/norm_v,
-                     j*sine/norm_v, k*sine/norm_v)
+        q = norm*cls(_cos(angle_in_radians), i*sine*inv_norm_v,
+                     j*sine*inv_norm_v, k*sine*inv_norm_v)
 
         return q
+
+_Number.register(Quaternion)
