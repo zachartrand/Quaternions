@@ -1,6 +1,35 @@
 [build-system]
 requires = [
     "setuptools>=42",
-    "wheel"
+    "wheel",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "quaternions-for-python"
+version = "1.1.2"
+authors = [
+  { name="Zach Chartrand", email="zachartrand999@gmail.com" },
+]
+description = "A module for using quaternions in Python."
+readme = "README.rst"
+license = { file="LICENSE.md" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = [
+    "quaternion", "rotation", "rotate", "3d", "euler", "spin",
+    "complex", "imaginary", "dot", "cross", "product", "gimbal-lock",
+    "hamilton", "versor", "norm", "vector", "axis", "math",
+    "mathematics",
+]
+
+[tool.setuptools]
+package-dir = { "" = "quaternions" }
+
+[project.urls]
+"Homepage" = "https://github.com/zachartrand/Quaternions"
+"Bug Tracker" = "https://github.com/zachartrand/Quaternions/issues"
