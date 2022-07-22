@@ -66,15 +66,15 @@ quaternions together uses the same syntax as ints and floats:
 (1 - 2i - 3j + 4k)
 >>> print(q2)
 (1 + 4i - 3j - 2k)
->>> print(q1 + q2)
+>>> print(q1+q2)
 (2 + 2i - 6j + 2k)
->>> print(q1 - q2)
+>>> print(q1-q2)
 (-6i + 0j + 6k)
->>> print(q2 - q1)
+>>> print(q2-q1)
 (6i + 0j - 6k)
->>> print(q1 * q2)
+>>> print(q1*q2)
 (8 + 20i + 6j + 20k)
->>> print(q2 * q1)
+>>> print(q2*q1)
 (8 - 16i - 18j - 16k)
 >>> print(q1/q2)
 (-0.19999999999999996 - 0.8i - 0.4j - 0.4k)
@@ -90,11 +90,11 @@ Using the qmath module
 ----------------------
 
 The qmath module contains some functions that are compatible with quaternions,
-similarly to how the `cmath`_ module works. These include the exponential function
-and the natural logarithm. It also includes a function, ```rotate3d``, that takes
-an iterable of coordinates and rotates them a given angle around a given axis
-(the z-axis by default). Here is an example rotating the point ``(1, 0, 0)``
-around the z-axis:
+similarly to how the `cmath`_ module works. These include the exponential function,
+the natural logarithm, and the square root function. It also includes a function,
+``rotate3d()``, that takes an iterable of coordinates and rotates them a given angle
+around a given axis (the z-axis by default). Here is an example rotating the point
+``(1, 0, 0)`` around the z-axis:
 
 .. _cmath: https://docs.python.org/3.10/library/cmath.html
 
