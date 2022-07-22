@@ -102,13 +102,9 @@ def log(q: Quaternion or float, base: float = e) -> Quaternion:
     # magnitudes in this range.
     # ==================================================================
     if isinstance(q, Quaternion):
-        real = q.real
-        # If the quaternion is real, use the normal logarithm functions.
+        # If the quaternion is real, use the normal logarithm function.
         if q.is_scalar():
-            if 0.71 <= real and real <= 1.73:
-                return Quaternion(_log1p(real-1), 0, 0, 0)
-            else:
-                return Quaternion(_log(real), 0, 0, 0)
+            return Quaternion(_log(q.real), 0, 0, 0)
         else:
             norm = q.norm
             if 0.71 <= norm and norm <= 1.73:
@@ -117,24 +113,21 @@ def log(q: Quaternion or float, base: float = e) -> Quaternion:
                 # calculating the norm - 1 of the quaternion. This
                 # formula is taken from the cmath log function,
                 # modified for four (4) components.
-                abs_components = [abs(real), abs(q.i), abs(q.j), abs(q.k)]
+                abs_components = [abs(q.real), abs(q.i), abs(q.j), abs(q.k)]
                 max_component = max(abs_components)
                 abs_components.remove(max_component)
-                real = _log1p(
-                    (max_component - 1) * (max_component + 1)
+                real = 0.5 * _log1p(
+                    (max_component - 1)*(max_component + 1)
                     + abs_components[0]*abs_components[0]
                     + abs_components[1]*abs_components[1]
-                    + abs_components[2]*abs_components[2]) / 2.0
+                    + abs_components[2]*abs_components[2])
             else:
                 real = _log(norm)
 
             angle = q.angle
             answer = real + q.unit_vector()*angle
             if base != e:
-                if 0.71 <= base and base <= 1.73:
-                    answer = answer / _log1p(base-1)
-                else:
-                    answer = answer / _log(base)
+                answer = answer / _log(base)
 
             return answer
 
@@ -220,7 +213,7 @@ def rotate3d(
         axis_i, axis_j, axis_k = _makeListLen3(axis)
         if _hypot(axis_i, axis_j, axis_k) < 1e-12:
             raise ValueError(
-                'The axis to rotate around must be a nonzero vector.')
+                'The axis of rotation must be a nonzero vector.')
 
         q = Quaternion.from_angle(
                 angle*0.5, (axis_i, axis_j, axis_k), degrees=degrees)
@@ -274,6 +267,7 @@ def cross_product(
 
     return (q1*q2).get_vector_components()
 
+
 def rotate_Euler(
         point: Iterable[float],
         yaw: float, pitch: float, roll: float,
@@ -299,29 +293,45 @@ def rotate_Euler(
         z_axis: The initial z-axis of the coordinate system that
             **point** belongs to. Default value is ``(0, 0, 1)``.
         degrees: When set to ``True``, this function interprets the
-            parameter **angle** as degrees. Set this parameter to
+            angle parameters as degrees. Set this parameter to
             ``False`` to use angles in radians. Default is ``True``.
     """
     # yaw: rotate around z-axis
     # pitch: rotate around y'-axis
     # roll: rotate around x"-axis
     # TODO: Code all standards of Euler angles into this function.
-    q_yaw = Quaternion.from_angle(yaw*0.5, z_axis)
-    x_prime_axis = (q_yaw * Quaternion(0, *x_axis).versor
-                    * q_yaw.inverse()).get_vector_components()
-    y_prime_axis = cross_product(z_axis, x_prime_axis)
-    q_pitch = Quaternion.from_angle(pitch*0.5, y_prime_axis)
-    x_doubleprime_axis = (q_pitch * Quaternion(0, *x_prime_axis).versor
-                    * q_pitch.inverse()).get_vector_components()
-    q_roll = Quaternion.from_angle(roll*0.5, x_doubleprime_axis)
+
+    # NOTE: Below is the old code for this function. Before, the old code
+    # manually calculated the new axes to rotate around. However, there
+    # is a way to calculate rotations using only the static axes, which
+    # reduces the number of calculations needed to rotate the point.
+    # The old code is kept to compare to the new version.
+    #
+    # q_yaw = Quaternion.from_angle(yaw*0.5, z_axis, degrees=degrees)
+    # x_prime_axis = (q_yaw * Quaternion(0, *x_axis).versor
+    #                 * q_yaw.inverse()).get_vector_components()
+    # y_prime_axis = cross_product(z_axis, x_prime_axis)
+    # q_pitch = Quaternion.from_angle(pitch*0.5, y_prime_axis, degrees=degrees)
+    # x_doubleprime_axis = (q_pitch * Quaternion(0, *x_prime_axis).versor
+    #                 * q_pitch.inverse()).get_vector_components()
+    # q_roll = Quaternion.from_angle(roll*0.5, x_doubleprime_axis, degrees=degrees)
+    #
+    # q_point = Quaternion(0, *point)
+    # q_p_prime = (
+    #     q_roll * (
+    #         q_pitch * (
+    #             q_yaw * q_point * q_yaw.inverse()
+    #         ) * q_pitch.inverse()
+    #     ) * q_roll.inverse()
+    # )
+
+    q_yaw = Quaternion.from_angle(yaw*0.5, z_axis, degrees=degrees)
+    y_axis = cross_product(z_axis, x_axis)
+    q_pitch = Quaternion.from_angle(pitch*0.5, y_axis, degrees=degrees)
+    q_roll = Quaternion.from_angle(roll*0.5, x_axis, degrees=degrees)
+    q_total = q_yaw * q_pitch * q_roll
 
     q_point = Quaternion(0, *point)
-    q_p_prime = (
-        q_roll * (
-            q_pitch * (
-                q_yaw * q_point * q_yaw.inverse()
-            ) * q_pitch.inverse()
-        ) * q_roll.inverse()
-    )
+    q_p_prime = q_total * q_point * q_total.conjugate()
 
     return q_p_prime.get_vector_components()
