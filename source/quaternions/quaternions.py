@@ -946,9 +946,9 @@ class Quaternion():
             angle_in_radians = _radians(angle)
         else:
             angle_in_radians = angle
-        sine = _sin(angle_in_radians)
-        q = norm*cls(_cos(angle_in_radians), i*sine*inv_norm_v,
-                     j*sine*inv_norm_v, k*sine*inv_norm_v)
+        sine_over_norm_v = _sin(angle_in_radians)*inv_norm_v
+        q = norm*cls(_cos(angle_in_radians), i*sine_over_norm_v,
+                     j*sine_over_norm_v, k*sine_over_norm_v)
 
         return q
 
