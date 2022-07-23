@@ -769,8 +769,8 @@ class Quaternion():
         i_ratio = self.i * inv_max_component
         j_ratio = self.j * inv_max_component
         k_ratio = self.k * inv_max_component
-        inv_denom = (real_ratio * self.real + i_ratio * self.i
-                 + j_ratio * self.j + k_ratio * self.k)**-1
+        inv_denom = (real_ratio*self.real + i_ratio*self.i
+                     + j_ratio*self.j + k_ratio*self.k)**-1
 
         q_inverse = (
             Quaternion(real_ratio*inv_denom, -i_ratio*inv_denom,
