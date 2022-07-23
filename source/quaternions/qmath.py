@@ -23,8 +23,8 @@ from math import (
 )
 from typing import Iterable, Tuple
 
-from . import Quaternion
-from .quaternions import _makeListLen3
+from quaternions import Quaternion
+from quaternions import _makeListLen3
 
 nani: Quaternion = Quaternion(0, float('nan'), 0, 0)
 nanj: Quaternion = Quaternion(0, 0, float('nan'), 0)
