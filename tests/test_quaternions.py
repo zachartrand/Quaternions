@@ -16,6 +16,7 @@ q1_dividedby_q2 = Quaternion(-0.2, -0.8, -0.4, -0.4)
 q2_inverse_times_q1 = Quaternion(-0.2, 0.4, 0.4, 0.8)
 q2_dividedby_q1 = Quaternion(-0.2, 0.8, 0.4, 0.4)
 q1_inverse_times_q2 = Quaternion(-0.2, -0.4, -0.4, -0.8)
+one = Quaternion(1)
 
 
 class TestQuaternions(unittest.TestCase):
@@ -33,6 +34,10 @@ class TestQuaternions(unittest.TestCase):
         self.assertEqual(q2*q1, q2_times_q1)
         self.assertAlmostEqual(1/q2*q1, q2_inverse_times_q1, places=12)
         self.assertAlmostEqual(1/q1*q2, q1_inverse_times_q2, places=12)
+        self.assertEqual(q1*q1.inverse(), one)
+        self.assertEqual(q1.inverse()*q1, one)
+        self.assertEqual(q2*q2.inverse(), one)
+        self.assertEqual(q2.inverse()*q2, one)
 
     def test_division(self):
         self.assertAlmostEqual(q1/q2, q1_dividedby_q2, places=12)
@@ -46,7 +51,7 @@ class TestQuaternions(unittest.TestCase):
         # q == pow(q, 1)
         self.assertEqual(q1, q1**1)
         # q**0 == 1
-        self.assertEqual(q1**0, Quaternion(1))
+        self.assertEqual(q1**0, one)
         # pow(q, -2) == q.inverse()**2
         self.assertEqual(q1**-2, q1.inverse()*q1.inverse())
 
@@ -55,19 +60,19 @@ class TestQuaternions(unittest.TestCase):
         self.assertAlmostEqual(
             Quaternion.from_angle(pi/3, [1, 2, 3], norm=5, degrees=False),
             Quaternion(2.500000, 1.157275, 2.314550, 3.471825), places=6)
-        # Test the degrees flag as both True and False and make sure 
+        # Test the degrees flag as both True and False and make sure
         # the result is the same.
         self.assertEqual(Quaternion.from_angle(60, [1, 2, 3], norm=5),
             Quaternion.from_angle(pi/3, [1, 2, 3], norm=5, degrees=False))
         # Test that an angle of zero produces a scalar quaternion.
         self.assertEqual(
             Quaternion.from_angle(0, [1, 2, 3], norm=5), Quaternion(5))
-        # Test that an angle of zero produces a scalar quaternion 
+        # Test that an angle of zero produces a scalar quaternion
         # even with an irrational norm.
         self.assertEqual(
             Quaternion.from_angle(0, [1, 2, 3], norm=pi),
             pi*Quaternion.from_angle(0, [1, 2, 3]))
-        # Test that the norm parameter works properly, creating a 
+        # Test that the norm parameter works properly, creating a
         # quaternion of that norm.
         self.assertAlmostEqual(
             Quaternion.from_angle(pi/3, [1, 2, 3], norm=5, degrees=False).norm, 5.0, places=12)

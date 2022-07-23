@@ -23,8 +23,8 @@ from math import (
 )
 from typing import Iterable, Tuple
 
-from . import Quaternion
-from .quaternions import _makeListLen3
+from quaternions import Quaternion
+from quaternions.quaternions import _makeListLen3
 
 nani: Quaternion = Quaternion(0, float('nan'), 0, 0)
 nanj: Quaternion = Quaternion(0, 0, float('nan'), 0)
@@ -33,6 +33,8 @@ nank: Quaternion = Quaternion(0, 0, 0, float('nan'))
 infi: Quaternion = Quaternion(0, float('inf'), 0, 0)
 infj: Quaternion = Quaternion(0, 0, float('inf'), 0)
 infk: Quaternion = Quaternion(0, 0, 0, float('inf'))
+
+_inv_ln10 = 0.4342944819032518  # 0x3fdb cb7b 1526 e50e
 
 
 def exp(q: Quaternion or float) -> Quaternion:
@@ -140,7 +142,7 @@ def log(q: Quaternion or float, base: float = e) -> Quaternion:
 
 def log10(q: Quaternion or float) -> Quaternion:
     """Return the base-10 logarithm of the quaternion."""
-    return (log(q) / _log(10))
+    return (log(q)*_inv_ln10)
 
 
 def sqrt(q: Quaternion or float) -> Quaternion:

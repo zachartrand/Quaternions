@@ -769,8 +769,8 @@ class Quaternion():
         i_ratio = self.i * inv_max_component
         j_ratio = self.j * inv_max_component
         k_ratio = self.k * inv_max_component
-        inv_denom = (real_ratio * self.real + i_ratio * self.i
-                 + j_ratio * self.j + k_ratio * self.k)**-1
+        inv_denom = (real_ratio*self.real + i_ratio*self.i
+                     + j_ratio*self.j + k_ratio*self.k)**-1
 
         q_inverse = (
             Quaternion(real_ratio*inv_denom, -i_ratio*inv_denom,
@@ -946,9 +946,9 @@ class Quaternion():
             angle_in_radians = _radians(angle)
         else:
             angle_in_radians = angle
-        sine = _sin(angle_in_radians)
-        q = norm*cls(_cos(angle_in_radians), i*sine*inv_norm_v,
-                     j*sine*inv_norm_v, k*sine*inv_norm_v)
+        sine_over_norm_v = _sin(angle_in_radians)*inv_norm_v
+        q = norm*cls(_cos(angle_in_radians), i*sine_over_norm_v,
+                     j*sine_over_norm_v, k*sine_over_norm_v)
 
         return q
 
