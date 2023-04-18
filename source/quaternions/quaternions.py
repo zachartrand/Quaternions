@@ -607,10 +607,9 @@ class Quaternion():
             if other == 1.0:
                 return self
             
-            inv_other = other**-1
             return self.__class__(
-                self.real*inv_other, self.i*inv_other,
-                self.j*inv_other, self.k*inv_other)
+                self.real/other, self.i/other,
+                self.j/other, self.k/other)
 
         # See __add__ for complex logic.
         elif isinstance(other, complex):
@@ -847,29 +846,28 @@ class Quaternion():
         elif self.norm == 1.0:
             return self.conjugate()
         
-        inv_max_component = (max(self.abs_components()))**-1
-        real_ratio = self.real * inv_max_component
-        i_ratio = self.i * inv_max_component
-        j_ratio = self.j * inv_max_component
-        k_ratio = self.k * inv_max_component
-        inv_denom = (real_ratio*self.real + i_ratio*self.i
-                    + j_ratio*self.j + k_ratio*self.k)**-1
+        max_component = max(self.abs_components())
+        real_ratio = self.real/max_component
+        i_ratio = self.i/max_component
+        j_ratio = self.j/max_component
+        k_ratio = self.k/max_component
+        denom = (real_ratio*self.real + i_ratio*self.i
+                    + j_ratio*self.j + k_ratio*self.k)
 
         q_inverse = (
-            self.__class__(real_ratio*inv_denom, -i_ratio*inv_denom,
-                        -j_ratio*inv_denom, -k_ratio*inv_denom))
+            self.__class__(real_ratio/denom, -i_ratio/denom,
+                        -j_ratio/denom, -k_ratio/denom))
 
         return q_inverse
     
-    def squared(self):
+    def squared(self) -> Quaternion:
         """Return self**2."""
         max_component = max(self.abs_components())
-        inv_max_component = 1/max_component
         real = _math.fsum([
-            (self.real*inv_max_component)*self.real, 
-            (-self.i*inv_max_component)*self.i, 
-            (-self.j*inv_max_component)*self.j, 
-            (-self.k*inv_max_component)*self.k
+            (self.real/max_component)*self.real, 
+            (-self.i/max_component)*self.i, 
+            (-self.j/max_component)*self.j, 
+            (-self.k/max_component)*self.k
         ])
         real = real*max_component
 
@@ -1032,9 +1030,17 @@ class Quaternion():
                 (self.i != 0.0) or (self.j != 0.0) or (self.k != 0.0)))
     
     def is_zero(self) -> bool:
+        """
+        Return ``True`` if self is the zero quaternion. 
+        Otherwise, return ``False``.
+        """
         return not self.__bool__()
     
     def is_not_zero(self) -> bool:
+        """
+        Return ``False`` if self is the zero quaternion. 
+        Otherwise, return ``True``.
+        """
         return self.__bool__()
 
     ## Attributes ##
