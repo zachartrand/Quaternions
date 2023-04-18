@@ -19,11 +19,11 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'Quaternions'
-copyright = '2022, Zach Chartrand'
+copyright = '2023, Zach Chartrand'
 author = 'Zach Chartrand'
 
 # The full version, including alpha/beta/rc tags
-release = '1.1.3'
+release = '2.0.0'
 
 
 # -- General configuration ---------------------------------------------------
