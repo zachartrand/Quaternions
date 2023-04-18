@@ -8,6 +8,24 @@ qmath
 
 .. currentmodule:: quaternions.qmath
 
+Quaternion Boolean functions
+----------------------------
+.. autofunction:: isclose
+
+   .. versionadded:: 2.0.0
+
+.. autofunction:: isfinite
+   
+   .. versionadded:: 2.0.0
+
+.. autofunction:: isinf
+
+   .. versionadded:: 2.0.0
+
+.. autofunction:: isnan
+
+   .. versionadded:: 2.0.0
+
 Quaternion mathematical functions
 ---------------------------------
 .. autofunction:: exp
@@ -18,6 +36,30 @@ Quaternion mathematical functions
 
 .. autofunction:: sqrt
 
+.. autofunction:: cos
+
+   .. versionadded:: 2.0.0
+
+.. autofunction:: cosh
+
+   .. versionadded:: 2.0.0
+
+.. autofunction:: sin
+
+   .. versionadded:: 2.0.0
+
+.. autofunction:: sinh
+
+   .. versionadded:: 2.0.0
+
+.. autofunction:: tan
+   
+   .. versionadded:: 2.0.0
+
+.. autofunction:: tanh
+
+   .. versionadded:: 2.0.0
+
 Rotation functions
 ------------------
 .. autofunction:: rotate3d
@@ -26,8 +68,8 @@ Rotation functions
 
    .. versionadded:: 1.1.0
 
-Other functions
----------------
+Vector functions
+----------------
 .. autofunction:: cross_product
 
    .. versionadded:: 1.1.0
