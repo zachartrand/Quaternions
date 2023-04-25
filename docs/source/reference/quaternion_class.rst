@@ -10,15 +10,41 @@ The Quaternion class
 Methods
 =======
 
-Normal methods
---------------
-.. automethod:: Quaternion.conjugate
+Object-based methods
+--------------------
+.. automethod:: Quaternion.abs_components
+
+   .. versionadded:: 2.0.0
+
+.. automethod:: Quaternion.from_complex
+
+   .. versionadded:: 2.0.0
 
 .. automethod:: Quaternion.get_imag
 
 .. automethod:: Quaternion.get_vector_components
 
+Mathematical methods
+--------------------
+.. automethod:: Quaternion.conjugate
+
 .. automethod:: Quaternion.inverse
+
+.. automethod:: Quaternion.squared
+
+   .. versionadded:: 2.0.0
+
+.. automethod:: Quaternion.cos_norm
+
+   .. versionadded:: 2.0.0
+
+.. automethod:: Quaternion.sin_norm
+
+   .. versionadded:: 2.0.0
+
+.. automethod:: Quaternion.log_norm
+
+   .. versionadded:: 2.0.0
 
 .. automethod:: Quaternion.unit_quaternion
 
@@ -31,6 +57,14 @@ Boolean methods
 .. automethod:: Quaternion.is_scalar
 
 .. automethod:: Quaternion.is_vector
+
+.. automethod:: Quaternion.is_zero
+
+   .. versionadded:: 2.0.0
+
+.. automethod:: Quaternion.is_not_zero
+
+   .. versionadded:: 2.0.0
 
 Class methods
 -------------

@@ -8,33 +8,156 @@ definitions of mathematical functions expanded to work with quaternions.
 # Created on Wed Apr 28 21:23:28 2021
 # @author: Zach Chartrand <zachartrand999@gmail.com>
 
-__all__ = ['exp', 'log', 'log10', 'sqrt', 'rotate3d', 'rotate_Euler',
-           'dot_product', 'cross_product', 'pi', 'tau', 'e', 'inf',
-           'infi', 'infj', 'infk', 'nan', 'nani', 'nanj', 'nank']
+__all__ = [
+    'isinf', 'isfinite', 'isnan', 'isclose', 'exp', 'log', 'log10', 
+    'sqrt', 'cosh', 'cos', 'sinh', 'sin', 'tanh', 'tan', 'rotate3d', 
+    'dot_product', 'cross_product', 'rotate_Euler', 'pi', 'tau', 'e', 
+    'inf', 'infi', 'infj', 'infk', 'nan', 'nani', 'nanj', 'nank',
+]
 
-from math import (
-    exp as _exp,
-    cos as _cos,
-    sin as _sin,
-    log as _log,
-    log1p as _log1p,
-    hypot as _hypot,
-    pi, tau, e, inf, nan,
-)
+import sys
+import math as _math
+from math import pi, tau, e, inf, nan
+import cmath as _cmath
 from typing import Iterable, Tuple
 
 from quaternions import Quaternion
-from quaternions.quaternions import _makeListLen3
+from quaternions._misc import makeListLen3 as _makeListLen3
 
-nani: Quaternion = Quaternion(0, float('nan'), 0, 0)
-nanj: Quaternion = Quaternion(0, 0, float('nan'), 0)
-nank: Quaternion = Quaternion(0, 0, 0, float('nan'))
+nani: Quaternion = Quaternion(0, nan, 0, 0)
+nanj: Quaternion = Quaternion(0, 0, nan, 0)
+nank: Quaternion = Quaternion(0, 0, 0, nan)
 
-infi: Quaternion = Quaternion(0, float('inf'), 0, 0)
-infj: Quaternion = Quaternion(0, 0, float('inf'), 0)
-infk: Quaternion = Quaternion(0, 0, 0, float('inf'))
+infi: Quaternion = Quaternion(0, inf, 0, 0)
+infj: Quaternion = Quaternion(0, 0, inf, 0)
+infk: Quaternion = Quaternion(0, 0, 0, inf)
 
-_inv_ln10 = 0.4342944819032518  # 0x3fdb cb7b 1526 e50e
+_INV_LN10 = 0.4342944819032518  # Reciprocal of the natural log of 10.
+_LN2 = 0.69314718055994530942  # Natural log of 2.
+_HALF = 0.5
+_TWO = 2.0
+_SMALL_FLOAT = sys.float_info.min
+_LARGE_FLOAT = 0.25*sys.float_info.max
+_LOG_LARGE_FLOAT = _math.log(_LARGE_FLOAT)
+_MANT_DIG = sys.float_info.mant_dig
+_SCALE_DOWN_EXP = -_MANT_DIG//2 + 1
+_SCALE_UP_EXP = 2*(-_SCALE_DOWN_EXP)
+
+
+def isinf(q: Quaternion) -> bool:
+    """
+    Return ``True`` if any component of q is an infinity, 
+    and ``False`` otherwise.
+    """
+    if isinstance(q, (int, float)):
+        return _math.isinf(q)
+    
+    elif isinstance(q, Quaternion):
+        return any([_math.isinf(component) for component in q])
+    
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"must be a Quaternion or real number, not {q_type}")
+
+
+def isfinite(q: Quaternion) -> bool:
+    """
+    Return ``True`` if all components of q are finite, 
+    and ``False`` otherwise.
+    """
+    if isinstance(q, (int, float)):
+        return _math.isfinite(q)
+    
+    elif isinstance(q, Quaternion):
+        return all([_math.isfinite(component) for component in q])
+    
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"must be a Quaternion or real number, not {q_type}")
+
+
+def isnan(q: Quaternion) -> bool:
+    """
+    Return ``True`` if any component of q is a NaN, 
+    and ``False`` otherwise.
+    """
+    if isinstance(q, (int, float)):
+        return _math.isnan(q)
+    
+    elif isinstance(q, Quaternion):
+        return any([_math.isnan(component) for component in q])
+
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"must be a Quaternion or real number, not {q_type}")
+
+
+def isclose(a, b, *, rel_tol=1e-09, abs_tol=1e-09) -> bool:
+    """
+    Determine whether two Quaternions are close in value.
+    
+    For the values to be considered close, the difference between 
+    them must be smaller than at least one of the tolerances.
+
+    -inf, inf and NaN behave similarly to the IEEE 754 Standard. 
+    That is, NaN is not close to anything, even itself. 
+    inf and -inf are only close to themselves.
+
+    Parameters:
+        a (Quaternion): The first Quaternion.
+        b (Quaternion): The second Quaternion.
+        rel_tol (float): maximum difference for being considered 
+            "close", relative to the magnitude of the input values
+        abs_tol (float): maximum difference for being considered 
+            "close", regardless of the magnitude of the input values
+    
+    Returns:
+        bool: ``True`` if a is close in value to b, 
+            and ``False`` otherwise.
+    """
+
+    # Catch bad types.
+    if not isinstance(a, (int, float, Quaternion)):
+        a_type = a.__class__.__qualname__
+        raise TypeError("must be a Quaternion or real number, "
+                        f"not {a_type}")
+
+    if not isinstance(b, (int, float, Quaternion)):
+        b_type = b.__class__.__qualname__
+        raise TypeError("must be a Quaternion or real number, "
+                        f"not {b_type}")
+    
+    if not isinstance(rel_tol, (int, float)):
+        rel_tol_type = rel_tol.__class__.__qualname__
+        raise TypeError(f"must be real number, not {rel_tol_type}")
+
+    if not isinstance(abs_tol, (int, float)):
+        abs_tol_type = abs_tol.__class__.__qualname__
+        raise TypeError(f"must be real number, not {abs_tol_type}")
+    
+    # Catch bad values for rel_tol and abs_tol.
+    if rel_tol < 0.0 or abs_tol < 0.0:
+        raise ValueError("tolerances must be non-negative")
+    
+    # Convert a and b to Quaternions if they are ints or floats.
+    if isinstance(a, (int, float)):
+        a = Quaternion(a, 0, 0, 0)
+    
+    if isinstance(b, (int, float)):
+        b = Quaternion(b, 0, 0, 0)
+    
+    # Exact equality returns True.
+    if a == b:
+        return True
+    
+    # Infinities of the same sign are caught by the above equality.
+    # This one catches infinities of differing signs and returns False.
+    if (any([_math.isinf(component) for component in a]) 
+        or any([_math.isinf(component) for component in b])):
+        return False
+    
+    diff = (a - b).norm
+
+    return (((diff <= rel_tol * b.norm) 
+            or (diff <= rel_tol*a.norm)) 
+            or diff <= abs_tol)
 
 
 def exp(q: Quaternion or float) -> Quaternion:
@@ -51,32 +174,43 @@ def exp(q: Quaternion or float) -> Quaternion:
     # if the input is an int or float.
     # ==================================================================
     if isinstance(q, Quaternion):
-        a = q.real
-        # If there is only a real component, skip all of the
-        # complicated mathematics.
         if q.is_scalar():
-            return Quaternion(_exp(a), 0, 0, 0)
+            return Quaternion(_math.exp(q.real), q.i, q.j, q.k)  # Preserve signed zeroes.
 
-        theta = q.vector_norm
-        unit_vector = q.unit_vector()
-        return _exp(a)*(_cos(theta) + unit_vector*_sin(theta))
+        elif isfinite(q):
+            vector = q.vector
+            v_norm = q.vector_norm
+            
+            return (_math.exp(q.real)/v_norm)*(vector.cos_norm()*v_norm + vector*vector.sin_norm())
+            
+        else:  # Handle infinities and NaNs.
+            try:
+                imag = q.vector_norm
+            
+            except OverflowError:
+                imag = _LARGE_FLOAT
+            
+            z = _cmath.exp(complex(q.real, imag))
+
+            return q.from_complex(z)
 
     elif isinstance(q, (int, float)):
-        return Quaternion(_exp(q), 0, 0, 0)
+        return Quaternion(_math.exp(q), 0, 0, 0)
 
     # Raise a TypeError for complex numbers. Complex numbers should
     # either use the cmath function or be converted to a quaternion
     # before using this function.
     elif isinstance(q, complex):
         raise TypeError("Use the cmath module's exp() function or convert "
-                      + "the complex number to a quaternion.")
+                        "the complex number to a quaternion.")
 
     # Raise a TypeError if the input is not a real number or quaternion.
+    q_type = q.__class__.__qualname__
     raise TypeError("Cannot take the quaternion exponential of a "
-                 + f"{q.__class__.__qualname__}.")
+                    f"{q_type}.")
 
 
-def log(q: Quaternion or float, base: float = e) -> Quaternion:
+def log(q: Quaternion or float, base: Quaternion or float = e) -> Quaternion:
     """
     Return the logarithm of a quaternion to the given base.
 
@@ -96,86 +230,249 @@ def log(q: Quaternion or float, base: float = e) -> Quaternion:
     #
     # where acos is the inverse cosine function and a is the scalar
     # part of the quaternion.
-    #
-    # Because log1p() is more accurate than log() for inputs close to
-    # 1.0, when the norm of the quaternion is between 0.71 and 1.73
-    # inclusive, log1p is automatically used. This range is used based
-    # on the cmath module, which uses log1p for complex numbers with
-    # magnitudes in this range.
     # ==================================================================
-    if isinstance(q, Quaternion):
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.log(q), 0.0, 0.0, 0.0)
+    
+    elif isinstance(q, Quaternion):
         # If the quaternion is real, use the normal logarithm function.
         if q.is_scalar():
-            return Quaternion(_log(q.real), 0, 0, 0)
-        else:
-            norm = q.norm
-            if 0.71 <= norm and norm <= 1.73:
-                # This takes advantage of the difference of perfect
-                # squares to avoid potential loss of precision in
-                # calculating the norm - 1 of the quaternion. This
-                # formula is taken from the cmath log function,
-                # modified for four (4) components.
-                abs_components = [abs(q.real), abs(q.i), abs(q.j), abs(q.k)]
-                max_component = max(abs_components)
-                abs_components.remove(max_component)
-                real = 0.5 * _log1p(
-                    (max_component - 1)*(max_component + 1)
-                    + abs_components[0]*abs_components[0]
-                    + abs_components[1]*abs_components[1]
-                    + abs_components[2]*abs_components[2])
-            else:
-                real = _log(norm)
-
-            angle = q.angle
-            answer = real + q.unit_vector()*angle
+            return Quaternion(_math.log(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        elif not isfinite(q):
+            try:
+                z = _cmath.log(complex(q.real, q.vector_norm))
+            
+            except OverflowError:
+                q = _HALF*q
+                z = _cmath.log(complex(q.real, q.vector_norm)) + _LN2
+            
+            result = q.from_complex(z)
             if base != e:
-                answer = answer / _log(base)
+                result = result / log(base)
+            
+            return result
+        
+        real = q.log_norm()
+        vector = (q.angle/q.vector_norm)*q.vector
+        result = real + vector
+        if base != e:
+            result = result / log(base)
+        
+        return result
 
-            return answer
-
-    elif isinstance(q, (int, float)):
-        return log(Quaternion(q, 0.0, 0.0, 0.0))
-
+    q_type = q.__class__.__qualname__
     raise TypeError("Cannot take the quaternion logarithm of a "
-                 + f"{q.__class__.__qualname__}.")
+                    f"{q_type}.")
 
 
 def log10(q: Quaternion or float) -> Quaternion:
     """Return the base-10 logarithm of the quaternion."""
-    return (log(q)*_inv_ln10)
+    return (log(q)*_INV_LN10)
 
 
 def sqrt(q: Quaternion or float) -> Quaternion:
     """Return the square root of the quaternion."""
-    # Negative real numbers have an infinite number of square roots in
-    # the quaternion number system. These conditional statements check
-    # if the input is a negative real number. If the input is not a
-    # negative real number, this function returns the input raised to
-    # 0.5. This should always return a Quaternion object.
     sqrt_real = 0.0
-    if isinstance(q, Quaternion):
-        if q.is_scalar() and q.real < 0:
-            real = q.real
-            sqrt_real = (-q.real)**0.5
-    elif isinstance(q, (int, float)):
-        if q < 0:
+    if isinstance(q, (int, float)):
+        if q < 0.0:
+            # Negative real numbers have an infinite number of 
+            # square roots in the quaternion number system.
             real = q
-            sqrt_real = (-q)**0.5
+            sqrt_real = abs(q)**_HALF
+        elif q == 0.0:
+            return Quaternion(0, 0, 0, 0)
         else:
-            q = Quaternion(q)
-
+            return Quaternion(_math.sqrt(q), 0, 0, 0)
+    
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            if q.real < 0:
+                # Negative real numbers have an infinite number of 
+                # square roots in the quaternion number system.
+                real = q.real
+                sqrt_real = (abs(q.real))**_HALF
+            elif q.is_zero():
+                return Quaternion(0, q.i, q.j, q.k)  # Preserve signed zeros.
+            
+            else:
+                return Quaternion(_math.sqrt(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        else:  # Use cmath.sqrt function.
+            # Find largest magnitude component and scale accordingly.
+            max_component = max(q.abs_components())
+            if max_component <= 4.0*_SMALL_FLOAT:
+                q = _math.ldexp(1.0, _SCALE_UP_EXP)*q
+                scale = _math.ldexp(1.0, _SCALE_DOWN_EXP)
+            
+            else:
+                q = 0.25*q
+                scale = _TWO
+            
+            imag = q.vector_norm
+            z = _cmath.sqrt(complex(q.real, imag))
+            
+            return scale*q.from_complex(z)
+    
     if sqrt_real:
-        if len(str(sqrt_real)) <= 4:
-            sqrt_string = str(sqrt_real)
-        else:
+        sqrt_string = str(sqrt_real)
+        if len(str(sqrt_real)) > 8:
             sqrt_string = f"{sqrt_real:.6f}..."
-
+        
         raise ValueError(
             "Negative real quaternions have an infinite number of square "
-            + f"roots.\nThe square root of {real} is the sphere of radius "
-            + f"{sqrt_string} centered at the origin.")
+            + f"roots.\nThe square root of {real} is the sphere of "
+            + f"vector quaternions of radius {sqrt_string} "
+            + "centered at the origin.")
+    
+    else:
+        q_type = q.__class__.__qualname__
+        raise TypeError(
+            f"Cannot take the Quaternion square root of a {q_type}")
 
-    return pow(q, 0.5)
+
+def cosh(q: Quaternion) -> Quaternion:
+    """Return the hyperbolic cosine of q."""
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.cosh(q), 0, 0, 0)
+
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            return Quaternion(_math.cosh(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        try:
+            imag = q.vector_norm
+        
+        except OverflowError:
+            imag = _math.hypot(*[_HALF*component for component in q.get_vector_components()])
+            imag = _TWO*_math.fmod(imag, tau)
+        
+        z = _cmath.cosh(complex(q.real, imag))
+
+        return q.from_complex(z)
+    
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"Cannot take the Quaternion hyperbolic cosine of a {q_type}")
+
+
+def cos(q: Quaternion or float) -> Quaternion:
+    """Return the cosine of the quaternion."""
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.cos(q), 0, 0, 0)
+    
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            return Quaternion(_math.cos(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        try:
+            imag = q.vector_norm
+        
+        except OverflowError:
+            raise OverflowError("math range error, vector norm too large")
+        
+        z = _cmath.cos(complex(q.real, imag))
+
+        return q.from_complex(z)
+
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"Cannot take the Quaternion cosine of a {q_type}")
+
+
+def sinh(q: Quaternion) -> Quaternion:
+    """Return the hyperbolic sine of q."""
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.sinh(q), 0, 0, 0)
+
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            return Quaternion(_math.sinh(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        try:
+            imag = q.vector_norm
+        
+        except OverflowError:
+            imag = _math.hypot(*[_HALF*component for component in q.get_vector_components()])
+            imag = _TWO*_math.fmod(imag, tau)
+        
+        z = _cmath.sinh(complex(q.real, imag))
+
+        return q.from_complex(z)
+    
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"Cannot take the Quaternion hyperbolic sine of a {q_type}")
+
+
+def sin(q: Quaternion or float) -> Quaternion:
+    """Return the sine of the quaternion."""
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.sin(q), 0, 0, 0)
+    
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            return Quaternion(_math.sin(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        try:
+            imag = q.vector_norm
+        
+        except OverflowError:
+            raise OverflowError("math range error, vector norm too large")
+        
+        z = _cmath.sin(complex(q.real, imag))
+
+        return q.from_complex(z)
+
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"Cannot take the Quaternion sine of a {q_type}")
+
+
+def tanh(q: Quaternion) -> Quaternion:
+    """Return the hyperbolic tangent of q."""
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.tanh(q), 0, 0, 0)
+
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            return Quaternion(_math.tanh(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        try:
+            imag = q.vector_norm
+        
+        except OverflowError:
+            imag = _math.hypot(*[_HALF*component for component in q.get_vector_components()])
+            imag = _TWO*_math.fmod(imag, tau)
+        
+        z = _cmath.tanh(complex(q.real, imag))
+
+        return q.from_complex(z)
+    
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"Cannot take the Quaternion hyperbolic tangent of a {q_type}")
+
+
+def tan(q: Quaternion or float) -> Quaternion:
+    """Return the tangent of the quaternion."""
+    if isinstance(q, (int, float)):
+        return Quaternion(_math.tan(q), 0, 0, 0)
+    
+    elif isinstance(q, Quaternion):
+        if q.is_scalar():
+            return Quaternion(_math.tan(q.real), q.i, q.j, q.k)  # Preserve signed zeros.
+        
+        try:
+            imag = q.vector_norm
+        
+        except OverflowError:
+            # cmath.tan does not overflow with a very large imaginary part. 
+            # In fact, it converges. _LOG_LARGE_FLOAT is large enough 
+            # to reach that value.
+            imag = _LOG_LARGE_FLOAT
+        
+        z = _cmath.tan(complex(q.real, imag))
+
+        return q.from_complex(z)
+
+    q_type = q.__class__.__qualname__
+    raise TypeError(f"Cannot take the Quaternion tangent of a {q_type}")
 
 
 def rotate3d(
@@ -213,14 +510,13 @@ def rotate3d(
         p = Quaternion(0, *_makeListLen3(point))
 
         axis_i, axis_j, axis_k = _makeListLen3(axis)
-        if _hypot(axis_i, axis_j, axis_k) < 1e-12:
+        if _math.hypot(axis_i, axis_j, axis_k) < 1e-12:
             raise ValueError(
                 'The axis of rotation must be a nonzero vector.')
 
         q = Quaternion.from_angle(
-                angle*0.5, (axis_i, axis_j, axis_k), degrees=degrees)
-        if abs(q) != 1.0:
-            q = q.versor  # Ensures q is a unit vector.
+                angle*_HALF, (axis_i, axis_j, axis_k), degrees=degrees)
+        
         p_prime = q * p * q.inverse()
         if rounding >= 0:
             p_prime = round(p_prime, rounding)
@@ -302,38 +598,14 @@ def rotate_Euler(
     # pitch: rotate around y'-axis
     # roll: rotate around x"-axis
     # TODO: Code all standards of Euler angles into this function.
-
-    # NOTE: Below is the old code for this function. Before, the old code
-    # manually calculated the new axes to rotate around. However, there
-    # is a way to calculate rotations using only the static axes, which
-    # reduces the number of calculations needed to rotate the point.
-    # The old code is kept to compare to the new version.
-    #
-    # q_yaw = Quaternion.from_angle(yaw*0.5, z_axis, degrees=degrees)
-    # x_prime_axis = (q_yaw * Quaternion(0, *x_axis).versor
-    #                 * q_yaw.inverse()).get_vector_components()
-    # y_prime_axis = cross_product(z_axis, x_prime_axis)
-    # q_pitch = Quaternion.from_angle(pitch*0.5, y_prime_axis, degrees=degrees)
-    # x_doubleprime_axis = (q_pitch * Quaternion(0, *x_prime_axis).versor
-    #                 * q_pitch.inverse()).get_vector_components()
-    # q_roll = Quaternion.from_angle(roll*0.5, x_doubleprime_axis, degrees=degrees)
-    #
-    # q_point = Quaternion(0, *point)
-    # q_p_prime = (
-    #     q_roll * (
-    #         q_pitch * (
-    #             q_yaw * q_point * q_yaw.inverse()
-    #         ) * q_pitch.inverse()
-    #     ) * q_roll.inverse()
-    # )
-
-    q_yaw = Quaternion.from_angle(yaw*0.5, z_axis, degrees=degrees)
+    
+    q_yaw = Quaternion.from_angle(yaw*_HALF, z_axis, degrees=degrees)
     y_axis = cross_product(z_axis, x_axis)
-    q_pitch = Quaternion.from_angle(pitch*0.5, y_axis, degrees=degrees)
-    q_roll = Quaternion.from_angle(roll*0.5, x_axis, degrees=degrees)
+    q_pitch = Quaternion.from_angle(pitch*_HALF, y_axis, degrees=degrees)
+    q_roll = Quaternion.from_angle(roll*_HALF, x_axis, degrees=degrees)
     q_total = q_yaw * q_pitch * q_roll
 
     q_point = Quaternion(0, *point)
-    q_p_prime = q_total * q_point * q_total.conjugate()
+    q_p_prime = q_total * q_point * q_total.inverse()
 
     return q_p_prime.get_vector_components()
